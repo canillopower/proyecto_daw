@@ -2,31 +2,46 @@
 // añadimos los require necesario
 require_once("auxiliar/DB.php");
 
+$errorOperacion = '';
+$errores = [];
 // control acciones
 if (isset($_POST['enviar'])) {
     // si se envia el formulario, debemos comprobar si los datos del usuario son correctos
     if (isset($_POST['correo']) && isset($_POST['password'])) {
-        $usuario = DB::recuperarUsuario(
-                        $_POST['correo'],
-                        $_POST['password']);
 
-        // si le encontramos en la BBDD vamos si
-        // - Rol 1(USER)  y estado 2 (ACTIVO) > ir bandeja de entrada
-        // - Rol 1(USER)  y estado 1 (INACTIVO) > mostrar popup pendiente alta
-        // - Rol 2(USER)   > ir ventana gestión
-        // si no lo encontramos, mostrar alert de REGISTRO
-        if ($usuario != null) {
-            if ("1" == $usuario->getTipo()) {
-                $error = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
-            } else if ("2" == $usuario->getTipo()) {
-                // guardamos los datos en session y vamos a la ventana de correo
-                session_start();
-                $_SESSION['ID_USUARIO'] = $usuario->getId();
-                $_SESSION['CORREO'] = $usuario->getCorreo();
-                header("Location: bandeja_entrada.php");
+        // validaciones de los campos
+        if (!filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
+            $errores[0] = 'El formato de la dirección de correo no es correcto';
+        }
+
+        if ($_POST['password'] == '') {
+            $errores[1] = 'La contraseña no puede estar vacia';
+        }
+
+        if (count($errores) == 0) {
+            
+            $usuario = DB::recuperarUsuario(
+                            $_POST['correo'],
+                            $_POST['password']);
+
+            // si le encontramos en la BBDD vamos si
+            // - Rol 1(USER)  y estado 2 (ACTIVO) > ir bandeja de entrada
+            // - Rol 1(USER)  y estado 1 (INACTIVO) > mostrar popup pendiente alta
+            // - Rol 2(USER)   > ir ventana gestión
+            // si no lo encontramos, mostrar alert de REGISTRO
+            if ($usuario != null) {
+                if ("1" == $usuario->getTipo()) {
+                    $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
+                } else if ("2" == $usuario->getTipo()) {
+                    // guardamos los datos en session y vamos a la ventana de correo
+                    session_start();
+                    $_SESSION['ID_USUARIO'] = $usuario->getId();
+                    $_SESSION['CORREO'] = $usuario->getCorreo();
+                    header("Location: bandeja_entrada.php");
+                }
+            } else {
+                $errorOperacion = "El usuario no existe en nuestra base de datos";
             }
-        } else {
-            $error = "Lo sentimos, pero su petición esta siendo procesada en estos momentos.";
         }
     }
 }
@@ -39,32 +54,42 @@ if (isset($_POST['enviar'])) {
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title>Ejemplo Tema 5: Login Tienda Web</title>
+        <title>Kanomail.es > LOGIN</title>
         <link href="tienda.css" rel="stylesheet" type="text/css">
     </head>
 
     <body>
         <div id='login'>
             <form action='login.php' method='post'>
-                <fieldset >
+                <fieldset>
                     <legend>Login</legend>
 
                     <div>
                         <label for='correo' >Correo:</label><br/>
                         <input type='text' name='correo' id='correo' maxlength="50" /><br/>
+                            <?php
+                            if (isset($errores[0])) {
+                                echo "<label>***" . $errores[0] . "</label>";
+                            }
+                            ?>
                     </div>
                     <div>
                         <label for='password' >Contraseña:</label><br/>
                         <input type='password' name='password' id='password' maxlength="50" /><br/>
+                            <?php
+                            if (isset($errores[1])) {
+                                echo "<label>***" . $errores[1] . "</label>";
+                            }
+                            ?>
                     </div>
                     <div>
-                        <a href="registro.php" >Registrarse</a>
+                        <p><a href="registro.php" >Registrarse</a></p>
                     </div>
                     <div>
-                        <input type='submit' name='enviar' value='Enviar' />
+                        <input type='submit' name='enviar' value='Acceder' />
                     </div>
                     <div >
-                        <label><?php echo $error; ?></label><br/>
+                        <label><?php echo $errorOperacion; ?></label><br/>
                     </div>  
                 </fieldset>
             </form>
