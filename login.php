@@ -25,20 +25,27 @@ if (isset($_POST['enviar'])) {
                             $_POST['password']);
 
             // si le encontramos en la BBDD vamos si
-            // - Rol 1(USER)  y estado 2 (ACTIVO) > ir bandeja de entrada
-            // - Rol 1(USER)  y estado 1 (INACTIVO) > mostrar popup pendiente alta
-            // - Rol 2(USER)   > ir ventana gestión
+            // - Rol 2(USER)  y estado 2 (ACTIVO) > ir bandeja de entrada
+            // - Rol 2(USER)  y estado 1 (INACTIVO) > mostrar popup pendiente alta
+            // - Rol 1(ADMIN)   > ir ventana gestión
             // si no lo encontramos, mostrar alert de REGISTRO
             if ($usuario != null) {
-                if ("1" == $usuario->getTipo()) {
-                    $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
-                } else if ("2" == $usuario->getTipo()) {
-                    // guardamos los datos en session y vamos a la ventana de correo
-                    session_start();
-                    $_SESSION['ID_USUARIO'] = $usuario->getId();
-                    $_SESSION['CORREO'] = $usuario->getCorreo();
-                    header("Location: bandeja_entrada.php");
+                
+                if ("2" == $usuario->getTipo()) {
+                    if ("1" == $usuario->getEstado()) {
+                        $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
+                    } else if ("2" == $usuario->getEstado()) {
+                        // guardamos los datos en session y vamos a la ventana de correo
+                        session_start();
+                        $_SESSION['ID_USUARIO'] = $usuario->getId();
+                        $_SESSION['CORREO'] = $usuario->getCorreo();
+                        header("Location: bandeja_entrada.php");
+                    }
+                } else if ("1" == $usuario->getTipo()) {
+                    header("Location: admin_usuarios.php");
                 }
+                
+               
             } else {
                 $errorOperacion = "El usuario no existe en nuestra base de datos";
             }
