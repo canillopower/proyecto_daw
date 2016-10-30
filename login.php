@@ -30,15 +30,16 @@ if (isset($_POST['enviar'])) {
             // - Rol 1(ADMIN)   > ir ventana gestión
             // si no lo encontramos, mostrar alert de REGISTRO
             if ($usuario != null) {
-                
+                // guardamos en la session los datos del usuario
+                   session_start();
+                    $_SESSION['ID_USUARIO'] = $usuario->getId();
+                    $_SESSION['CORREO'] = $usuario->getCorreo();
+                    $_SESSION['PASSWORD'] = $usuario->getPassword();
                 if ("2" == $usuario->getTipo()) {
                     if ("1" == $usuario->getEstado()) {
                         $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
                     } else if ("2" == $usuario->getEstado()) {
                         // guardamos los datos en session y vamos a la ventana de correo
-                        session_start();
-                        $_SESSION['ID_USUARIO'] = $usuario->getId();
-                        $_SESSION['CORREO'] = $usuario->getCorreo();
                         header("Location: bandeja_entrada.php");
                     }
                 } else if ("1" == $usuario->getTipo()) {

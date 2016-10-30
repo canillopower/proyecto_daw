@@ -49,6 +49,27 @@ class DB {
 	}        
         return null;
     }
+    
+    
+    public static function recuperarTodosUsuarios() {
+        $sql = "SELECT * FROM usuarios";
+        $sql .= " WHERE ID_TIPO_USUARIO = 2";
+
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            
+            $todoDatos = array();
+            $datos = $resultado->fetch();
+            
+            while ($datos != null) {
+                $todoDatos[] = new Usuario($datos);
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
+	}        
+        return null;
+    }
 
     public static function recuperarUsuarioPorCorreo($correo) {
         $sql = "SELECT * FROM usuarios";
@@ -77,7 +98,7 @@ class DB {
     
     public static function insertarOactualizarUsuario($tipoOperacion, $datos) {
         
-        if (self::recuperarUsuarioPorCorreo($datos['CORREO']) != null) {
+        if (isset($datos['CORREO']) && self::recuperarUsuarioPorCorreo($datos['CORREO']) != null) {
             return 1;
         }
         
@@ -103,7 +124,7 @@ class DB {
                 $sql .= $valores;
                 $sql .= ")";
             }
-            echo "<p>" . $sql . "</p>";
+           
             $resultado = self::ejecutaConsulta($sql);
             if ($resultado->rowCount() > 0) {
                 return 0;
@@ -120,9 +141,8 @@ class DB {
                     }
                 }
                 $sql =  substr($sql, 0, -1);
-                $sql = " WHERE ID_USUARIO = ".$datos['ID_USUARIO'];
-                 echo "<p>" . $sql . "</p>";
-                 
+                $sql = $sql." WHERE ID_USUARIO = ".$datos['ID_USUARIO'];
+
                 $resultado = self::ejecutaConsulta($sql);
                 
                 if ($resultado->rowCount() > 0) {
