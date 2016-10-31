@@ -84,6 +84,38 @@ class DB {
         return null;
     }
     
+    public static function recuperarUsuarioPorNombreEstado($nombre, $estado) {
+        $sql = "SELECT * FROM usuarios WHERE";
+        
+        if ($nombre != null) {
+            $sql .= " nombre like '%" . $nombre . "%'";
+            if ($estado != null) {
+                $sql .= " AND";
+            }
+        }
+        
+        if ($estado != null) {
+            $sql .= " ID_ESTADO_USUARIO = ".$estado;
+        }
+        
+        
+        echo $sql;
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            
+            $todoDatos = array();
+            $datos = $resultado->fetch();
+            
+            while ($datos != null) {
+                $todoDatos[] = new Usuario($datos);
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
+	}        
+        return null;
+    }
+    
      public static function recuperarProxIdUsuario() {
         $sql = "SELECT MAX(ID_USUARIO) FROM usuarios";
         
@@ -107,14 +139,14 @@ class DB {
             $id = self::recuperarProxIdUsuario();
             if ($id != null) {
                 $campos = "ID_USUARIO,";
-                $valores = $id.",";
+                $valores = $id . ",";
                 foreach ($datos as $campo => $valor) {
-                      $campos .=  $campo.",";
-                      $valores .=  $valor.",";
+                    $campos .= $campo . ",";
+                    $valores .= "'".$valor . "',";
                 }
-                $campos =  substr($campos, 0, -1);
-                $valores =  substr($valores, 0, -1);
-                
+                $campos = substr($campos, 0, -1);
+                $valores = substr($valores, 0, -1);
+
                 $sql = "INSERT INTO usuarios ";
                 $sql .= "(";
                 $sql .= $campos;
@@ -123,13 +155,13 @@ class DB {
                 $sql .= "(";
                 $sql .= $valores;
                 $sql .= ")";
-            }
-           
-            $resultado = self::ejecutaConsulta($sql);
-            if ($resultado->rowCount() > 0) {
-                return 0;
-            } else {
-                return 2;
+                echo $sql;
+                $resultado = self::ejecutaConsulta($sql);
+                if ($resultado) {
+                    return 0;
+                } else {
+                    return 2;
+                }
             }
         } else if ("UPDATE" == $tipoOperacion){
 
@@ -137,7 +169,7 @@ class DB {
                 $sql = "UPDATE usuarios SET ";
                 foreach ($datos as $campo => $valor) {
                     if ($campo != 'ID_USUARIO') {
-                        $sql .= $campo." = ".$valor.",";
+                        $sql .= $campo." = '".$valor."',";
                     }
                 }
                 $sql =  substr($sql, 0, -1);
@@ -145,7 +177,7 @@ class DB {
 
                 $resultado = self::ejecutaConsulta($sql);
                 
-                if ($resultado->rowCount() > 0) {
+                if ($resultado) {
                     return 0;
                 } else {
                     return 2;

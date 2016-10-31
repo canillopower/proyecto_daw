@@ -5,19 +5,30 @@ require_once("auxiliar/DB.php");
 $error = [];
 $errorOperacion ="";
 $datos = [];
+session_start();
+
+
+$usuario = null;
+if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO']) && isset($_SESSION['MODIFICAR'])) {
+    $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
+}
+
 
 // control acciones
-if (isset($_POST['registrarse'])) {
+if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
 
     // validamos que todos los campos esten informados
     
     // correo
     //if (isset($_POST['correo']) && $_POST['correo'] != '') {
-    if (isset($_POST['correo']) && filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
-        $datos['CORREO'] = $_POST['correo'];
-    } else {
-        $error[0] = "El campo correo no puede estar vacio";
+    if (isset($_POST['registrarse'])) {
+        if (isset($_POST['correo']) && filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
+            $datos['CORREO'] = $_POST['correo'];
+        } else {
+            $error[0] = "El campo correo no puede estar vacio";
+        }
     }
+    
     
     // password
     if (isset($_POST['password']) && $_POST['password'] != '') {
@@ -57,28 +68,47 @@ if (isset($_POST['registrarse'])) {
     
     // si no encontramos rerrores. podemos registrar
     if (count($error) == 0) {
-        // 0 > correcto
-        // 1 > la cuenta de correo ya existe
-        // 2 > error durante la actualización o inserción del registro 
-        $datos['ID_TIPO_USUARIO'] = 2;
-        $datos['ID_ESTADO_USUARIO'] = 1;
-        $resultado_insert = DB::insertarOactualizarUsuario("INSERT", $datos);
-        if ($resultado_insert == 0) {
-            // insercion correcta y redirigimos a la ventana de loging hasta
-            // que el admin de de alta las peticiones
-            echo "<script>
-                    alert('There are no fields to generate a report');
+        
+        
+        if (isset($_POST['registrarse'])) {
+            $datos['ID_TIPO_USUARIO'] = 2;
+            $datos['ID_ESTADO_USUARIO'] = 1;
+            // 0 > correcto
+            // 1 > la cuenta de correo ya existe
+            // 2 > error durante la actualización o inserción del registro 
+            
+            $resultado_insert = DB::insertarOactualizarUsuario("INSERT", $datos);
+            if ($resultado_insert == 0) {
+                // insercion correcta y redirigimos a la ventana de loging hasta
+                // que el admin de de alta las peticiones
+                echo "<script>
+                    alert('Se ha dado de alta en el sistema correctamente');
                     window.location.href='login.php';
                 </script>";
-            // header("Location: login.php");
-        } else if ($resultado_insert == 1) {
-            // error inserción porque el correo ya existe
-            $errorOperacion = "Lo sentimos, pero la dirección de correo ya existe";
-            $error[0] = "La dirección ya existe";
-                    
-        } else if ($resultado_insert == 2) {
-            // error inserción
-             $errorOperacion = "Lo sentimos, se ha producido un error durante la inserción";
+                // header("Location: login.php");
+            } else if ($resultado_insert == 1) {
+                // error inserción porque el correo ya existe
+                $errorOperacion = "Lo sentimos, pero la dirección de correo ya existe";
+                $error[0] = "La dirección ya existe";
+            } else if ($resultado_insert == 2) {
+                // error inserción
+                $errorOperacion = "Lo sentimos, se ha producido un error durante la inserción";
+            }
+        } else if (isset($_POST['modificar'])) {
+            $datos['ID_USUARIO'] = $usuario->getId();
+             $resultado_insert = DB::insertarOactualizarUsuario("UPDATE", $datos);
+            if ($resultado_insert == 0) {
+                // insercion correcta y redirigimos a la ventana de loging hasta
+                // que el admin de de alta las peticiones
+                echo "<script>
+                    alert('Se han modificado sus datos de manera correctamente');
+                    window.location.href='login.php';
+                </script>";
+                // header("Location: login.php");
+            } else if ($resultado_insert == 2) {
+                // error inserción
+                $errorOperacion = "Lo sentimos, se ha producido un error durante la actualización";
+            }
         }
     }
 }
@@ -103,7 +133,12 @@ if (isset($_POST['registrarse'])) {
                     
                     <div>
                         <label for='correo' >Correo:</label><br/>
-                        <input type='text' name='correo' id='correo' maxlength="50" /><br/>
+                        <input type='text' name='correo' id='correo' maxlength="50"  
+                            <?php 
+                                if ($usuario != null) { echo "disabled = true value = '".$usuario->getCorreo()."' ";} 
+                            ?>
+                               />
+                        <br/>
                          <?php
                             if (isset($error[0])) {
                                 echo "<label>***".$error[0]."</label>";
@@ -113,7 +148,11 @@ if (isset($_POST['registrarse'])) {
                     
                     <div>
                         <label for='password' >Contraseña:</label><br/>
-                        <input type='password' name='password' id='password' maxlength="50" /><br/>
+                        <input type='password' name='password' id='password' maxlength="50" 
+                           <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getPassword()."' ";} 
+                            ?>
+                               /><br/>
                          <?php
                             if (isset($error[1])) {
                                 echo "<label>***".$error[1]."</label>";
@@ -123,8 +162,13 @@ if (isset($_POST['registrarse'])) {
 
                     <div>
                         <label for='nombre' >Nombre:</label><br/>
-                        <input type='text' name='nombre' id='nombre' maxlength="50" /><br/>
+                        <input type='text' name='nombre' id='nombre' maxlength="50" 
+                               <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getNombre()."' ";} 
+                            ?>
+                               /><br/>
                          <?php
+                         
                             if (isset($error[2])) {
                                 echo "<label>***".$error[2]."</label>";
                             }
@@ -133,7 +177,12 @@ if (isset($_POST['registrarse'])) {
                     
                     <div>
                         <label for='ape_1' >Primer apellido:</label><br/>
-                        <input type='text' name='ape_1' id='ape_1' maxlength="50" /><br/>
+                        <input type='text' name='ape_1' id='ape_1' maxlength="50" 
+                               <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getApe1()."' ";} 
+                            ?>
+                               
+                               /><br/>
                         <?php
                             if (isset($error[3])) {
                                 echo "<label>***".$error[3]."</label>";
@@ -143,7 +192,12 @@ if (isset($_POST['registrarse'])) {
 
                     <div>
                         <label for='ape_2' >Segundo apellido:</label><br/>
-                        <input type='text' name='ape_2' id='ape_2' maxlength="50" /><br/>
+                        <input type='text' name='ape_2' id='ape_2' maxlength="50" 
+                               <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getApe2()."' ";} 
+                            ?>
+                               
+                               /><br/>
                         <?php
                             if (isset($error[4])) {
                                 echo "<label>***".$error[4]."</label>";
@@ -154,14 +208,25 @@ if (isset($_POST['registrarse'])) {
                     <div>
                         <label for='sexo' >Sexo:</label><br/>
                         <select name='sexo' id ='sexo'>
-                            <option value='1'>Hombre</option>
+                            <option value='1'
+                                    <?php 
+                                if ($usuario != null && $usuario->getSexo() == 1) { echo " selected = true ";} 
+                            ?>
+                               
+                                    
+                                    >Hombre</option>
                             <option value='2'>Mujer</option>
                         </select>
                     </div>
                     
                     <div>
                         <label for='localidad' >Localidad:</label><br/>
-                        <input type='text' name='localidad' id='localidad' maxlength="50" /><br/>
+                        <input type='text' name='localidad' id='localidad' maxlength="50" 
+                               <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getLocalidad()."' ";} 
+                            ?>
+                               
+                               /><br/>
                         <?php
                             if (isset($error[5])) {
                                 echo "<label>***".$error[5]."</label>";
@@ -172,8 +237,18 @@ if (isset($_POST['registrarse'])) {
                         <label><?php echo $errorOperacion; ?></label><br/>
                     </div> 
                     <div>
-                        <input type='submit' name='registrarse' value='Registrarse' />
+                        <?php 
+                      
+                            if ($usuario != null) {
+                                echo "<input type='submit' name='modificar' value='Modificar' />";
+                            } else {
+                                echo "<input type='submit' name='registrarse' value='Registrarse' />";
+                            }
+                        ?>
+                        
                     </div>                   
+                    
+                    
                 </fieldset>
             </form>
         </div>
