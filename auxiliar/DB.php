@@ -54,7 +54,7 @@ class DB {
     public static function recuperarTodosUsuarios() {
         $sql = "SELECT * FROM usuarios";
         $sql .= " WHERE ID_TIPO_USUARIO = 2";
-
+        $sql.= "  ORDER BY ID_USUARIO DESC";
         $resultado = self::ejecutaConsulta ($sql);
         
 	if(isset($resultado) && $resultado->rowCount() > 0) {
@@ -98,8 +98,9 @@ class DB {
             $sql .= " ID_ESTADO_USUARIO = ".$estado;
         }
         
+        // incluyo ordenacion
+        $sql.= "  ORDER BY ID_USUARIO DESC";
         
-        echo $sql;
         $resultado = self::ejecutaConsulta ($sql);
         
 	if(isset($resultado) && $resultado->rowCount() > 0) {

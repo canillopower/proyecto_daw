@@ -2,7 +2,7 @@
     require_once "PHPMailer-master/class.phpmailer.php";
     require_once "PHPMailer-master/class.smtp.php";
 
-class CORREO {
+class GEST_CORREO {
     
     public static function enviarCorreoBienvenida($de, $passUser, $para, $operacion) {
           $mail = new PHPMailer;

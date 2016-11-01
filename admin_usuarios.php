@@ -2,7 +2,7 @@
 // añadimos los require necesario
 require_once("auxiliar/DB.php");
 require_once("auxiliar/Usuario.php");
-require_once("auxiliar/CORREO.php");
+require_once("auxiliar/GEST_CORREO.php");
 
 $error = [];
 $errorOperacion ="";
@@ -18,13 +18,13 @@ if (isset($_POST['activar']) && isset($_POST['id_usuario']) && isset($_POST['cor
     $datos["ID_USUARIO"] = $_POST['id_usuario'];
     $datos["ID_ESTADO_USUARIO"] = "2"; // cambiamos de inactivo 1 a 2 activo
     DB::insertarOactualizarUsuario("UPDATE", $datos);
-/*
-    CORREO::enviarCorreoBienvenida(
+
+    GEST_CORREO::enviarCorreoBienvenida(
             $_SESSION['ID_USUARIO'],
             $_SESSION['PASSWORD'],
             $_POST['correo_usuario'],
             "activada");
-    */
+    
     unset($_POST['activar']);
     unset($_POST['id_usuario']);
     unset($_POST['correo_usuario']);
@@ -34,13 +34,13 @@ if (isset($_POST['activar']) && isset($_POST['id_usuario']) && isset($_POST['cor
     $datos["ID_USUARIO"] = $_POST['id_usuario'];
     $datos["ID_ESTADO_USUARIO"] = "1"; // cambiamos de inactivo 1 a 2 activo
     DB::insertarOactualizarUsuario("UPDATE", $datos);
-  /*
-     CORREO::enviarCorreoBienvenida(
+ 
+     GEST_CORREO::enviarCorreoBienvenida(
             $_SESSION['ID_USUARIO'],
             $_SESSION['PASSWORD'],
             $_POST['correo_usuario'],
             "desactivada");
-     */
+   
     unset($_POST['desactivar']);
     unset($_POST['id_usuario']);
     unset($_POST['correo_usuario']);
