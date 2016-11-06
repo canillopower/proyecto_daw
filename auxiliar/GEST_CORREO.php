@@ -24,6 +24,27 @@ class GEST_CORREO {
             return 1;
         }
     }
+    
+    public static function enviarCorreo($de, $passUser, $para, $texto) {
+          $mail = new PHPMailer;
+        $mail->IsSMTP();
+        $mail->host = "kanomail.es";
+        $mail->Username = $de;
+        $mail->Password = $passUser;
+        $mail->AddAddress($para);
+
+        $mail->Body = $texto;
+
+
+        if ($mail->send()) {
+            echo "Message has been sent successfully";
+            return 0;
+            
+        } else {
+            echo "Mailer Error: " . $mail->ErrorInfo;
+            return 1;
+        }
+    }
 }  
 
 

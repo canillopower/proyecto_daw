@@ -1,6 +1,8 @@
 <?php
 // añadimos los require necesario
 require_once('Usuario.php');
+require_once('Correo.php');
+require_once('DatosEnvioCorreo.php');
 
 class DB {  
     
@@ -127,6 +129,60 @@ class DB {
             return $datos[0] + 1 ;  
 	}        
         return null;
+    }
+    
+     public static function recuperarProxIdCorreo() {
+        $sql = "SELECT MAX(ID_CORREO) FROM correo";
+        
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            $datos = $resultado->fetch();
+            return $datos[0] + 1 ;  
+	}        
+        return null;
+    }
+    
+    public static function recuperarCorreosPorCorreo($correo) {
+             $sql = "SELECT DISTINCT corr.* FROM correo corr, usuarios usu";
+        $sql .= " WHERE usu.ID_USUARIO = corr.ID_USUARIO "
+                . " AND usu.CORREO = '". $correo. "'";
+        $sql.= "  ORDER BY corr.FECHA_ENVIO DESC";
+
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            
+            $todoDatos = array();
+            $datos = $resultado->fetch();
+            $datosEnvio = DB::recuperarDatosCorreo($datos['ID_CORREO']);
+            
+            while ($datos != null) {
+                $todoDatos[] = new Correo($datos, $datosEnvio);
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
+	}        
+        return null;
+    }
+    
+     public static function recuperarDatosCorreo($idCorreo) {
+        $sql = "SELECT * FROM datos_envio_correo WHERE id_correo = ".$idCorreo;
+
+        $resultado = self::ejecutaConsulta ($sql);
+        
+        $todoDatos = array();
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+
+            $datos = $resultado->fetch();
+            
+            while ($datos != null) {
+                $todoDatos[] = new DatosEnvioCorreo($datos);
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
+	}        
+        return $todoDatos;
     }
     
     public static function insertarOactualizarUsuario($tipoOperacion, $datos) {
