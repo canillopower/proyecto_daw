@@ -132,14 +132,14 @@ class PHPMailer
      * @access protected
      * @var string
      */
-    protected $MIMEBody = '';
+    public $MIMEBody = '';
 
     /**
      * The complete compiled MIME message headers.
      * @var string
      * @access protected
      */
-    protected $MIMEHeader = '';
+    public $MIMEHeader = '';
 
     /**
      * Extra headers that createHeader() doesn't fold in.
@@ -935,6 +935,14 @@ class PHPMailer
         return false;
     }
 
+        public function copyToFolder($folderPath = null) {
+        $message = $this->MIMEHeader . $this->MIMEBody;
+        $path = "INBOX" . (isset($folderPath) && !is_null($folderPath) ? ".".$folderPath : ""); // Location to save the email
+        $imapStream = imap_open("{" . $this->Host . "}" . $path , $this->Username, $this->Password);
+        imap_append($imapStream, "{" . $this->Host . "}" . $path, $message);
+        imap_close($imapStream);
+    }
+    
     /**
      * Parse and validate a string containing one or more RFC822-style comma-separated email addresses
      * of the form "display name <address>" into an array of name/address pairs.
