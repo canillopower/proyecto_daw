@@ -44,8 +44,24 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
                 $usuario->getPassword(),
                 $_POST['msgno'], 
                 1);
+        $tipoBandeja = 1;
+        GEST_CORREO::borrarCorreo(
+                    $usuario->getCorreo(),
+                    $usuario->getPassword(),
+                    $_POST['msgno'],
+                    null,
+                    $tipoBandeja);
         }
-        
+    // marcarComoLeido
+    if (isset($_POST['marcarComoLeido']) 
+        && !empty($_POST['marcarComoLeido'])
+        && isset($_POST['msgno'])) {
+        GEST_CORREO::marcaCorreoLeido(
+                 $usuario->getCorreo(),
+                $usuario->getPassword(),
+                $_POST['msgno']
+                );
+        }
         // si ha pulsado sobre borrar correo defintiivmante
     if ((isset($_POST['borrarEmailDefinitivo3']) && !empty($_POST['borrarEmailDefinitivo3'])) ||
             ((isset($_POST['borrarEmailDefinitivo4']) && !empty($_POST['borrarEmailDefinitivo4'])))) {
@@ -139,12 +155,17 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
     // guardo los datos
     echo "<input type='hidden' name='msgno' value='" . $correoUsuario->getDatosCabecera()->msgno . "'>";
     
-    echo '<label onclick="mostrar(\'' . $correoUsuario->getDatosCabecera()->message_id . '\'); return false" />' . $cabecera . '</label> </br>';
+    
+    echo '<label onclick="mostrar(\'' . $correoUsuario->getDatosCabecera()->message_id . '\');" return false; />' . $cabecera . '</label> </br>';
+    
     echo "<div id='" . $correoUsuario->getDatosCabecera()->message_id . "' style='display:none'>";
     echo $correoUsuario->getCuerpoEmail();
     echo "</br>";
     if ($tipoCorreo == 1 || $tipoCorreo == 2) {
         echo "<input type='submit' name='borrarEmail' value='Borrar'>";
+        if ($tipoCorreo == 1) {
+           echo "<input type='submit' name='marcarComoLeido' value='Marcar leido'>";
+        }
     } else if ($tipoCorreo == 3) {
         echo "<input type='submit' name='borrarEmailDefinitivo3' value='Borrar definitivamente'>";
     } else if ($tipoCorreo == 4) {
@@ -192,9 +213,9 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > LOGIN</title>
-        <link href="tienda.css" rel="stylesheet" type="text/css">
-        <script>
-            function mostrar(id) {
+
+         <script type="application/javascript">
+            var mostrar = function(id) {
                 obj = document.getElementById(id);
                 obj.style.display = (obj.style.display == 'none') ? 'block' : 'none';
             }

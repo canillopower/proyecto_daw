@@ -128,7 +128,7 @@ class GEST_CORREO {
         
         for ($i = $size - 1; $i >= 0; $i--) {
             $datosCabecera = $overview[$i];
-            $body = imap_body($mbox, $datosCabecera->msgno, 0);
+            $body = imap_body($mbox, $datosCabecera->msgno, FT_PEEK);
             $correo =  new Correo($datosCabecera, $body);
             $todoDatos[$datosCabecera->msgno] = $correo;
         }
@@ -170,6 +170,15 @@ class GEST_CORREO {
        
     }
     
+    
+    public static function marcaCorreoLeido($de, $passUser, $msgno) {
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+        imap_reopen($mbox, $server.'INBOX');
+        imap_setflag_full($mbox, $msgno, '\\Seen' );
+        imap_close($mbox);
+        
+    }
     public static function moverCorreo($de, $passUser, $msgno, $tipoBandeja) {
         //tipo Bandeja
         // 1. Recibidos (IMBOx)
