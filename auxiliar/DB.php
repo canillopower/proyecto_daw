@@ -81,7 +81,46 @@ class DB {
 	if(isset($resultado) && $resultado->rowCount() > 0) {
             $datos = $resultado->fetch();
             $usuario = new Usuario($datos);
+            $usuario->setListaDistri(DB::recuperarListaDistribuccion($usuario->getId()));
             return $usuario;  
+	}        
+        return null;
+    }
+    
+    public static function recuperarListaDistribuccion($id_usuario) {
+        $sql = "SELECT * FROM lista_distribucion";
+        $sql .= " WHERE id_usuario='" . $id_usuario . "'";
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            $todoDatos = array();
+            $datos = $resultado->fetch();
+            
+            while ($datos != null) {
+                $todoDatos[$datos['NOMBRE_LISTA']] = DB::recuparDireccionesPorLista($datos['NOMBRE_LISTA']);
+                
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
+	}        
+        return null;
+    }
+    
+     public static function recuparDireccionesPorLista($nombre_lista) {
+        $sql = "SELECT * FROM direcciones";
+        $sql .= " WHERE nombre_lista ='" . $nombre_lista . "'";
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            $todoDatos = array();
+            $datos = $resultado->fetch();
+            
+            while ($datos != null) {
+                $todoDatos[] = $datos['DIRECCION'];
+                
+                $datos = $resultado->fetch();
+            }
+            return $todoDatos;  
 	}        
         return null;
     }
@@ -130,61 +169,7 @@ class DB {
 	}        
         return null;
     }
-    
-     public static function recuperarProxIdCorreo() {
-        $sql = "SELECT MAX(ID_CORREO) FROM correo";
-        
-        $resultado = self::ejecutaConsulta ($sql);
-        
-	if(isset($resultado) && $resultado->rowCount() > 0) {
-            $datos = $resultado->fetch();
-            return $datos[0] + 1 ;  
-	}        
-        return null;
-    }
-    
-    public static function recuperarCorreosPorCorreo($correo) {
-             $sql = "SELECT DISTINCT corr.* FROM correo corr, usuarios usu";
-        $sql .= " WHERE usu.ID_USUARIO = corr.ID_USUARIO "
-                . " AND usu.CORREO = '". $correo. "'";
-        $sql.= "  ORDER BY corr.FECHA_ENVIO DESC";
 
-        $resultado = self::ejecutaConsulta ($sql);
-        
-	if(isset($resultado) && $resultado->rowCount() > 0) {
-            
-            $todoDatos = array();
-            $datos = $resultado->fetch();
-            $datosEnvio = DB::recuperarDatosCorreo($datos['ID_CORREO']);
-            
-            while ($datos != null) {
-                $todoDatos[] = new Correo($datos, $datosEnvio);
-                $datos = $resultado->fetch();
-            }
-            return $todoDatos;  
-	}        
-        return null;
-    }
-    
-     public static function recuperarDatosCorreo($idCorreo) {
-        $sql = "SELECT * FROM datos_envio_correo WHERE id_correo = ".$idCorreo;
-
-        $resultado = self::ejecutaConsulta ($sql);
-        
-        $todoDatos = array();
-	if(isset($resultado) && $resultado->rowCount() > 0) {
-
-            $datos = $resultado->fetch();
-            
-            while ($datos != null) {
-                $todoDatos[] = new DatosEnvioCorreo($datos);
-                $datos = $resultado->fetch();
-            }
-            return $todoDatos;  
-	}        
-        return $todoDatos;
-    }
-    
     public static function insertarOactualizarUsuario($tipoOperacion, $datos) {
         
         if (isset($datos['CORREO']) && self::recuperarUsuarioPorCorreo($datos['CORREO']) != null) {

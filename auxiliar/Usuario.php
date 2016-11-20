@@ -18,6 +18,7 @@ class Usuario {
     protected $LOCALIDAD;
     protected $ID_TIPO_USUARIO;
     protected $ID_ESTADO_USUARIO;
+    protected $LISTAS_DISTRIBUCCION;
     
     public function getId() { return $this->ID_USUARIO; } 
     public function getCorreo() { return $this->CORREO; } 
@@ -29,6 +30,11 @@ class Usuario {
     public function getLocalidad() { return $this->LOCALIDAD; } 
     public function getTipo() { return $this->ID_TIPO_USUARIO; } 
     public function getEstado() { return $this->ID_ESTADO_USUARIO; } 
+    public function getListaDistri() { return $this->LISTAS_DISTRIBUCCION; } 
+    
+    public function setListaDistri($lista) {
+        $this->LISTAS_DISTRIBUCCION = $lista;
+    }
 
     public function __construct($datos) {
         $this->ID_USUARIO = $datos['ID_USUARIO'];

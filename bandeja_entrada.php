@@ -11,6 +11,7 @@ $correosNoLeidos = [];
 $correosEnviados = [];
 $correosBorrados = [];
 $usuario = null;
+$erroresEnvioCorreo = [];
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
 
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
@@ -94,6 +95,83 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         }
     }
 
+    //  enviar correo
+    if (isset($_POST['correoEnviar']) 
+        && !empty($_POST['correoEnviar'])) {
+        
+        $para = null;
+        $arrayDireccionesPara = null;
+        $arrayDireccionesCC = null;
+        $asunto = null;
+        $texto = null;
+                
+        // validamos que los correos son validas
+        
+        // validamos los datos
+        if (isset($_POST['correoPara']) 
+            && !empty($_POST['correoPara'])) {
+            
+            // controlamos si se  ha seleccionado una lista de distribuccion
+            if (isset($_POST['listas_districomboPara'])) {
+                foreach ($usuario->getListaDistri() as $nombreLista => $arrayDirecciones) {
+                    if ($nombreLista == $_POST['listas_districomboPara']) {
+                         foreach ($arrayDirecciones as $direccion) {
+                             $arrayDireccionesPara[] = $direccion."; ";
+                         }
+                    }
+                }
+            }
+            
+            $arrayDireccionesParaAux = explode("; ", $_POST['correoPara']);
+            foreach ($arrayDireccionesParaAux as $direc) {
+                $arrayDireccionesPara[] = $direc;
+            }
+            
+            if (count($arrayDireccionesPara) > 0) {
+                foreach ($arrayDireccionesPara as $direccion) {
+                    if (!filter_var($direccion, FILTER_VALIDATE_EMAIL)) {
+                        $erroresEnvioCorreo[1] = "La dirección ".$direccion." no cumple el formato requerido"; 
+                    }
+                } 
+            }
+        } else {
+            $erroresEnvioCorreo[0] = 'El campo para no puede estar vacio';  
+        }
+        
+        if (isset($_POST['correoCC']) 
+            && !empty($_POST['correoCC'])) {
+            $arrayDireccionesCC = explode("; ", $_POST['correoCC']);
+            
+            if (count($arrayDireccionesCC) > 0) {
+                foreach ($arrayDireccionesCC as $direccion) {
+                    if (!filter_var($direccion, FILTER_VALIDATE_EMAIL)) {
+                        $erroresEnvioCorreo[3] = "La dirección ".$direccion." no cumple el formato requerido"; 
+                    }
+                } 
+            }
+        }
+        
+        if (isset($_POST['correoAsunto']) 
+            && !empty($_POST['correoAsunto'])) {
+            $asunto = $_POST['correoAsunto'];
+        }
+        
+        if (isset($_POST['correoTexto']) 
+            && !empty($_POST['correoTexto'])) {
+            $texto = $_POST['correoTexto'];
+        }
+            
+        // si no hay errores, mandamos el correo
+         if (count($erroresEnvioCorreo) == 0) {
+             GEST_CORREO::enviarCorreo(
+                    $usuario->getCorreo(),
+                    $usuario->getPassword(),
+                     $arrayDireccionesPara,
+                     $arrayDireccionesCC,
+                     $asunto,
+                     $texto);
+         } 
+    }
 
 
     // 1. Recibidos (IMBOx)
@@ -195,6 +273,24 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
 }
 
 
+function montarListaDistri($usuario, $divId) {
+    echo "<div id='".$divId."' style='display: none'>";
+    if ($usuario->getListaDistri() != null 
+            && is_array($usuario->getListaDistri()) 
+            && count($usuario->getListaDistri()) > 0) {
+        // muestro el combo
+        echo "<select name='listas_distri".$divId."' id='listas_distri".$divId."'>";
+        echo "<option selected='selected' value = '0'>Seleccionar una lista...</option>";
+        foreach ($usuario->getListaDistri() as $nombreLista => $arrayDirecciones) {
+            echo "<option value = '" . $nombreLista . "'>" . $nombreLista . "</option>";
+        }
+
+        echo "</select> ";
+    } else {
+        echo "*** No tiene lista de distribución creada";
+    }
+    echo "</div>";
+}
 
 //acciones
 // - Modificar, reenvia al usuario a la ventana de registro y permite modificar los datos
@@ -231,10 +327,71 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
 <?php
 echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2();
 ?>
-
+            
+            <form action='bandeja_entrada.php' method='post'>
                 <input type='submit' name='modificar' value='Modificar datos de usuario' />
                 <input type='submit' name='salir' value='Salir' />
+                <br/>    
+                <label onclick="mostrar('ventana_envio'); return false" >Redactar mensaje </label>
+                
+                    <?php if ($erroresEnvioCorreo != null && count($erroresEnvioCorreo) > 0) {
+                        echo "<div id='ventana_envio' style='display: block'>";
+                        echo " *** Se han producido errores de validación al intentar enviarlo, revise los campos";
+                        echo "</br>";
+                    } else {
+                        echo "<div id='ventana_envio' style='display: none'>";
+                    }
+                    ?>
+                 
+                     <label>De:  </label>
+                     <input type='text' name='correoDe' id='correoDe' maxlength="50" disabled = "true" value=" <?php echo $usuario->getCorreo()?>"/>
+                      <br/>
+                     <label>Para:</label>
+                     <input type='text' name='correoPara' id='correoPara' maxlength="50"  <?php 
+                        if (isset($_POST['correoPara'])) {
+                            echo "value = '".$_POST['correoPara']."'";
+                        }
+                     ?> />
+                      <?php
+                            if (isset($erroresEnvioCorreo[0])) {
+                                echo "<label>***" . $erroresEnvioCorreo[0] . "</label>";
+                            }
+                            if (isset($erroresEnvioCorreo[1])) {
+                                echo "<label>***" . $erroresEnvioCorreo[1] . "</label>";
+                            }
+                            ?>
+                     
+                     <!-- OCULTAMOS LE DIV DEL COMBO DE DIRECCIONES -->
+                     <label onclick="mostrar('comboPara'); return false" > + </label>
+                     
+                     <?php 
+                        echo montarListaDistri($usuario, "comboPara");
+                     ?>
+                      <br/>
+                     <label>CC:</label>
+                     <input type='text' name='correoCC' id='correoCC' maxlength="50"  />
+                     <!-- OCULTAMOS LE DIV DEL COMBO DE DIRECCIONES -->
+                     <label onclick="mostrar('comboCC'); return false" > + </label>
+                     <?php 
+                        echo montarListaDistri($usuario, "comboCC");
+                     ?>
+                     
+                      <?php
+                            if (isset($erroresEnvioCorreo[3])) {
+                                echo "<label>***" . $erroresEnvioCorreo[3] . "</label>";
+                            }
 
+                            ?>
+                      <br/>
+                     <label>Asunto:</label>
+                     <input type='text' name='correoAsunto' id='correoAsunto' maxlength="50"  />
+                       <br/>
+                       <textarea rows='4' cols='50' name='correoTexto'>Introducir texto mensaje </textarea>
+                     <br/>
+                     <input type='submit' name='correoEnviar' value='Enviar'>
+                </div>
+
+            </form>     
                 <!-- insertamos la tabla con los correos entrantes-->
                 <p>Estado correos (pulsar para ver bandeja)</p>
                 <ul>

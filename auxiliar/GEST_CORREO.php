@@ -203,6 +203,58 @@ class GEST_CORREO {
        
     }
     
+    public static function enviarCorreo($de, $passUser, $para, $paraCC, $asunto, $texto) {
+           $mail = new PHPMailer;
+        $mail->IsSMTP();
+        $mail->host =  CONSTANTES::$HOST;
+        $mail->Username = $de;
+        $mail->Password = $passUser;
+
+        if ($para != null && count($para) > 0) {
+            
+            foreach ($para as $direccion) {
+                $mail->AddAddress($direccion);
+            }
+        }
+        
+        
+        if ($paraCC != null && count($paraCC) > 0) {
+            
+            foreach ($paraCC as $direccion) {
+                $mail->AddAddress($direccion);
+            }
+        }
+
+        $mail->Subject = $asunto;
+        $mail->Body = $texto;
+        
+
+        if ($mail->send()) {
+             $server =  CONSTANTES::$SERVER;
+             
+             $body = $mail->MIMEBody;
+             
+             $header = $mail->MIMEHeader;
+             $arrayHeader = iconv_mime_decode_headers($mail->getSentMIMEMessage());
+             $message = "From: ".$arrayHeader['From']."\r\n"
+                   . "To: ".$arrayHeader['To']."\r\n"
+                   . "Subject: ".$arrayHeader['Subject']."\r\n"
+                   . "Message-ID: ".$arrayHeader['Message-ID']."\r\n"
+                   . "".$body."\r\n";
+             
+            $imapStream = imap_open($server."Sent", $de, $passUser);
+            imap_append($imapStream, $server."Sent", $message, "\\Seen");
+            imap_close($imapStream);
+           
+            echo "Message has been sent successfully";
+            return 0;
+            
+        } else {
+            echo "Mailer Error: " . $mail->ErrorInfo;
+            return 1;
+        }
+    }
+    
 }  
 
 
