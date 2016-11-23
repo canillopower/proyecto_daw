@@ -12,6 +12,7 @@
  * @author Kano
  */
 class CONSTANTES {
-    public static $SERVER = "{192.168.0.158}";
+    //public static $SERVER = "{192.168.0.158}";
+    public static $SERVER = "{172.18.12.141}";
     public static $HOST = "kanomail.es";
 }

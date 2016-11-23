@@ -41,6 +41,7 @@ if (isset($_POST['enviar'])) {
                     } else if ("2" == $usuario->getEstado()) {
                         // guardamos los datos en session y vamos a la ventana de correo
                         header("Location: bandeja_entrada.php");
+                        //header("Location: listas_distribucion.php");
                     }
                 } else if ("1" == $usuario->getTipo()) {
                     header("Location: admin_usuarios.php");

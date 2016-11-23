@@ -63,6 +63,12 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
                 $_POST['msgno']
                 );
         }
+        
+        // si se desea crea lista distribución vamos a la la pantalla de listas
+    if (isset($_POST['crearListaDistri']) 
+        && !empty($_POST['crearListaDistri'])) {
+        header("Location: listas_distribucion.php");
+    }    
         // si ha pulsado sobre borrar correo defintiivmante
     if ((isset($_POST['borrarEmailDefinitivo3']) && !empty($_POST['borrarEmailDefinitivo3'])) ||
             ((isset($_POST['borrarEmailDefinitivo4']) && !empty($_POST['borrarEmailDefinitivo4'])))) {
@@ -140,7 +146,21 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         
         if (isset($_POST['correoCC']) 
             && !empty($_POST['correoCC'])) {
-            $arrayDireccionesCC = explode("; ", $_POST['correoCC']);
+              // controlamos si se  ha seleccionado una lista de distribuccion
+            if (isset($_POST['listas_districomboCC'])) {
+                foreach ($usuario->getListaDistri() as $nombreLista => $arrayDirecciones) {
+                    if ($nombreLista == $_POST['listas_districomboCC']) {
+                         foreach ($arrayDirecciones as $direccion) {
+                             $arrayDireccionesCC[] = $direccion."; ";
+                         }
+                    }
+                }
+            }
+            
+            $arrayDireccionesCCAux = explode("; ", $_POST['correoCC']);
+            foreach ($arrayDireccionesCCAux as $direc) {
+                $arrayDireccionesCC[] = $direc;
+            }
             
             if (count($arrayDireccionesCC) > 0) {
                 foreach ($arrayDireccionesCC as $direccion) {
@@ -286,9 +306,11 @@ function montarListaDistri($usuario, $divId) {
         }
 
         echo "</select> ";
+        
     } else {
         echo "*** No tiene lista de distribución creada";
     }
+    echo "<input type='submit' name='crearListaDistri' value='Crear listas distrubución'>";
     echo "</div>";
 }
 

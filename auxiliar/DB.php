@@ -169,7 +169,37 @@ class DB {
 	}        
         return null;
     }
+    
+    public static function comprobarSiExiste($nombreLista) {
+        $sql = "SELECT NOMBRE_LISTA FROM lista_distribucion WHERE NOMBRE_LISTA = '".$nombreLista."'";
+        
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            $datos = $resultado->fetch();
+            return true;
+	}        
+        return false;
+    }
 
+    
+    public static function insertarListaDistribucion($idUsuario, $nombreLista) {
+        if (DB::comprobarSiExiste($nombreLista)) {
+                // SI RETORNA TRUE, ES QUE EXISTE
+                return 1;
+        } else {
+                 
+                $sql = "INSERT INTO lista_distribucion (NOMBRE_LISTA, ID_USUARIO) ";
+                $sql = $sql." VALUES ('".$nombreLista."', ".$idUsuario.")";
+                $resultado = self::ejecutaConsulta($sql);
+
+                if ($resultado) {
+                    return 0;
+                } else {
+                    return 2;
+                }
+        }
+    }
     public static function insertarOactualizarUsuario($tipoOperacion, $datos) {
         
         if (isset($datos['CORREO']) && self::recuperarUsuarioPorCorreo($datos['CORREO']) != null) {
@@ -227,9 +257,9 @@ class DB {
             }
            
         }
-
- 
     }
+    
+ 
     
 }
 
