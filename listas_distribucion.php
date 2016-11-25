@@ -9,6 +9,7 @@ session_start();
 
 $usuario = null;
 $erroresAltaLista = [];
+$erroresBorrarLista = [];
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
 
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
@@ -30,6 +31,22 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
             }
         }
     }
+    
+     if (isset($_POST['borrarLista']) && !empty($_POST['borrarLista'])) {
+        
+        if (isset($_POST['nombreListaBorrar']) && !empty($_POST['nombreListaBorrar'])) {
+            
+            $resultadoOP = DB::borrarListaDistribucion($usuario->getId(), ($_POST['nombreListaBorrar']));
+            if ($resultadoOP == 1) {
+                 $erroresBorrarLista[1] = "***No se han podido borrar las direcciones asociadas";
+            } elseif ($resultadoOP == 2) {
+                $erroresBorrarLista[2] = "***No se ha podido borrar la lista";
+            }   
+             
+        }
+    }
+    
+    $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
 }
 
 //acciones
@@ -68,17 +85,34 @@ echo "<p> Gestión listas de distribucion"
         <form action='listas_distribucion.php' method='post'>
                 <input type='submit' name='volver' value='Volver bandeja de entrada' />
                 <input type='submit' name='salir' value='Salir' />
+        </form>
                 <br/>    
                 <!-- debo pintar las lista de ditribución dle usuasrio-->
                 <?php 
                     if ($usuario->getListaDistri() != null && count($usuario->getListaDistri()) > 0) {
                         foreach ($usuario->getListaDistri() as $nombreLista => $elementosLista) {
-                            echo $nombreLista."</br>";
-                           
+                            echo "<form action='listas_distribucion.php' method='post'>";
+                            echo "<input type='hidden' name='nombreListaBorrar' value='".$nombreLista."' />";
+                            echo $nombreLista." <input type='submit' name='borrarLista' value='Borrar lista' /></br>";
+                            
+                            
+                    
+                            echo "</form>";
                         }
 
                     }
+                    
+                     if (isset($erroresBorrarLista[1])) {
+                                echo $erroresBorrarLista[1];
+                            }
+                            
+                            if (isset($erroresBorrarLista[2])) {
+                                echo $erroresBorrarLista[2];
+                            }
                 ?>
+                
+                
+                 <form action='listas_distribucion.php' method='post'>
                 <input type='text' name='nombreLista'/>
                 <?php 
                     if (isset($erroresAltaLista[0])) {
@@ -95,7 +129,8 @@ echo "<p> Gestión listas de distribucion"
                         echo "<p>".$erroresAltaLista[2]."</p>";
                     }
                 ?>
-            </form>
+                 </form>
+         
         
     </body>
 </html>

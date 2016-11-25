@@ -200,6 +200,29 @@ class DB {
                 }
         }
     }
+    
+    public static function borrarListaDistribucion($idUsuario, $nombreLista) {
+    
+                // PRIMERO BORRAMOS LOS hijos
+        $sql = "DELETE FROM direcciones WHERE NOMBRE_LISTA = '" . $nombreLista . "';";
+
+        $resultado = self::ejecutaConsulta($sql);
+        if ($resultado) {
+            // SI TODO FUE BIEN CONTINUO BORRANDO
+            $sql = "DELETE FROM lista_distribucion WHERE NOMBRE_LISTA = '" . $nombreLista . "' AND ID_USUARIO = " . $idUsuario . " ";
+            $resultado = self::ejecutaConsulta($sql);
+
+            if ($resultado) {
+                return 0;
+            } else {
+                return 2;
+            }
+        } else {
+            return 1;
+        }
+    }
+    
+    
     public static function insertarOactualizarUsuario($tipoOperacion, $datos) {
         
         if (isset($datos['CORREO']) && self::recuperarUsuarioPorCorreo($datos['CORREO']) != null) {

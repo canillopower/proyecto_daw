@@ -40,8 +40,8 @@ if (isset($_POST['enviar'])) {
                         $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
                     } else if ("2" == $usuario->getEstado()) {
                         // guardamos los datos en session y vamos a la ventana de correo
-                        header("Location: bandeja_entrada.php");
-                        //header("Location: listas_distribucion.php");
+                        //header("Location: bandeja_entrada.php");
+                        header("Location: listas_distribucion.php");
                     }
                 } else if ("1" == $usuario->getTipo()) {
                     header("Location: admin_usuarios.php");
