@@ -56,7 +56,16 @@ if (isset($_POST['filtrar'])
                 || 
             (isset($_POST['estado']) && !empty($_POST['estado'])))
            ) {
-    $usuariosPteAlta = DB::recuperarUsuarioPorNombreEstado($_POST['nombre'], $_POST['estado']);
+    $nombre = null;
+    $estado = null;
+    if (isset($_POST['nombre']) && !empty($_POST['nombre'])) {
+        $nombre = $_POST['nombre'];
+    }
+    
+    if (isset($_POST['estado']) && !empty($_POST['estado'])) {
+        $estado = $_POST['estado'];
+    }
+    $usuariosPteAlta = DB::recuperarUsuarioPorNombreEstado($nombre, $estado);
     
 } else  {
     $usuariosPteAlta = DB::recuperarTodosUsuarios();
@@ -91,12 +100,19 @@ if (isset($_POST['filtrar'])
                     <div>
                         
                         <label for='nombre' >Nombre de usuario:</label><br/>
-                        <input type='text' name='nombre' id='nombre' maxlength="50" /><br/>
+                        <input type='text' name='nombre' id='nombre' maxlength="50"  value = "<?php 
+                            if (isset($_POST['nombre']) && !empty($_POST['nombre'])) {
+                                echo $_POST['nombre'];
+                            }
+                        ?>"/><br/>
                         
                         Estado:
-                        <input type="radio" name="estado" <?php if (isset($estado) && $estado == "activo") echo "checked"; ?> value="2">Activo
+                        <input type="radio" name="estado" 
+                            <?php 
+                                if (isset($estado) && $estado == 2) echo "checked"; 
+                            ?> value="2">Activo
                         
-                        <input type="radio" name="estado" <?php if (isset($estado) && $estado == "inactivo") echo "checked"; ?> value="1">Inactivo
+                        <input type="radio" name="estado" <?php if (isset($estado) && $estado == 1) echo "checked"; ?> value="1">Inactivo
                         </br>
                         <input type='submit' name='filtrar' value='Filtrar' />
                     </div>

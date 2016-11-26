@@ -181,6 +181,19 @@ class DB {
 	}        
         return false;
     }
+    
+     public static function comprobarSiExisteElemento($direccion,  $nombreLista) {
+        $sql = "SELECT * FROM direcciones WHERE NOMBRE_LISTA = '".$nombreLista."' "
+                . "AND DIRECCION  = '".$direccion."'";
+        
+        $resultado = self::ejecutaConsulta ($sql);
+        
+	if(isset($resultado) && $resultado->rowCount() > 0) {
+            $datos = $resultado->fetch();
+            return true;
+	}        
+        return false;
+    }
 
     
     public static function insertarListaDistribucion($idUsuario, $nombreLista) {
@@ -191,6 +204,24 @@ class DB {
                  
                 $sql = "INSERT INTO lista_distribucion (NOMBRE_LISTA, ID_USUARIO) ";
                 $sql = $sql." VALUES ('".$nombreLista."', ".$idUsuario.")";
+                $resultado = self::ejecutaConsulta($sql);
+
+                if ($resultado) {
+                    return 0;
+                } else {
+                    return 2;
+                }
+        }
+    }
+    
+    public static function insertarElementoListaDistribucion($direccion,  $nombreLista) {
+        if (DB::comprobarSiExisteElemento($direccion,  $nombreLista)) {
+                // SI RETORNA TRUE, ES QUE EXISTE
+                return 1;
+        } else {
+                 
+                $sql = "INSERT INTO direcciones (NOMBRE_LISTA, DIRECCION) ";
+                $sql = $sql." VALUES ('".$nombreLista."', '".$direccion."')";
                 $resultado = self::ejecutaConsulta($sql);
 
                 if ($resultado) {
@@ -220,6 +251,21 @@ class DB {
         } else {
             return 1;
         }
+    }
+    
+    public static function borrarElementoListaDistribucion($direccion,  $nombreLista) {
+       
+            // SI TODO FUE BIEN CONTINUO BORRANDO
+            $sql = "DELETE FROM direcciones WHERE NOMBRE_LISTA = '" . $nombreLista . "' "
+                    . "AND DIRECCION = '".$direccion."';";
+            $resultado = self::ejecutaConsulta($sql);
+
+            if ($resultado) {
+                return 0;
+            } else {
+                return 2;
+            }
+
     }
     
     

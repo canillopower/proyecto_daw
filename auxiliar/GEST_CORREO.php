@@ -17,11 +17,10 @@ class GEST_CORREO {
 
 
         if ($mail->send()) {
-            echo "Message has been sent successfully";
             return 0;
             
         } else {
-            echo "Mailer Error: " . $mail->ErrorInfo;
+            echo "Se ha producido un error durante el envio de correo: " . $mail->ErrorInfo;
             return 1;
         }
     }
@@ -68,16 +67,61 @@ class GEST_CORREO {
              $mail->copyToFolder(); // Will save into inbox
     $mail->copyToFolder("Sent"); // Will save into Sent folder
     */
-            echo "Message has been sent successfully";
+            
             return 0;
             
         } else {
-            echo "Mailer Error: " . $mail->ErrorInfo;
+            echo "Se ha producido un error durante el envio de correo: " . $mail->ErrorInfo;
             return 1;
         }
     }
     
-    
+     public static function recuperarCorreosPorBandeja($de, $passUser) {
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+        $list = imap_getmailboxes($mbox, $server, "*");
+        
+         // creamos las carpetas basicas
+        $lista = imap_list($mbox, $server, "*");
+        if (array_search($server . "Sent", $lista) === false) {
+            imap_createmailbox($mbox, imap_utf7_encode($server . "Sent"));
+        }
+
+        if (array_search($server . "Trash", $lista) === false) {
+            imap_createmailbox($mbox, imap_utf7_encode($server . "Sent"));
+        }
+        
+        $todoDatos = array();
+
+        if (is_array($list)) {
+
+            foreach ($list as $clave => $valor) {
+                $nombre = str_replace($server, "", imap_utf7_decode($valor->name));
+
+                //un vez obtenido el nombre del buzon, compruebo si existe carpeta, y me traigo sus correos
+                imap_reopen($mbox, $server . $nombre);
+
+                $MC = imap_check($mbox);
+                $MN = $MC->Nmsgs;
+                if ($MN > 0) {
+                    $overview = imap_fetch_overview($mbox, "1:$MN", 0);
+                    unset($correosDelBuzon);
+                    $correosDelBuzon[] = null;
+                    foreach ($overview as $claveArray => $datosCorreo) {
+                        
+                        $body = imap_body($mbox, $datosCorreo->msgno, FT_PEEK);
+                        $correo = new Correo($datosCorreo, $body);
+                        $correosDelBuzon[$datosCorreo->msgno] = $correo;
+                    }
+                    $todoDatos[$nombre] = $correosDelBuzon;
+                }
+            }
+        }
+
+        imap_close($mbox);
+        return $todoDatos;
+    }
+
     public static function recuperarCorreo($de, $passUser, $tipoBandeja) {
         //tipo Bandeja
         // 1. Recibidos (IMBOx)
@@ -89,7 +133,7 @@ class GEST_CORREO {
         
         
         $list = imap_list($mbox, $server, "*");
-          $todoDatos = array();
+        $todoDatos = array();
         
         if ($tipoBandeja == 1) {
             
@@ -170,6 +214,30 @@ class GEST_CORREO {
        
     }
     
+    public static function borrarCorreoCarpetaAdicional($de, $passUser, $msgno,$message_id, $carpetaOrigen) {
+        //tipo Bandeja
+        // 1. Recibidos (IMBOx)
+        // 2. Saliente (Sent)
+        // 3. Enviados (Trash)
+        
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+
+        imap_reopen($mbox, $server.$carpetaOrigen);
+
+       // imap_delete($mbox, $message_id, FT_UID);
+        if ($message_id != null && $msgno == null) {
+            imap_delete($mbox, $message_id, FT_UID);
+        } else if ($message_id == null && $msgno != null) {
+            imap_delete($mbox, $msgno);
+        }
+
+        imap_expunge($mbox);
+
+        imap_close($mbox);
+       
+    }
+    
     
     public static function marcaCorreoLeido($de, $passUser, $msgno) {
         $server = CONSTANTES::$SERVER;
@@ -200,6 +268,31 @@ class GEST_CORREO {
         imap_mail_move($mbox, $msgno, "Trash");
         
         imap_close($mbox);
+       
+    }
+    
+    public static function moverCorreoCarpeta($de, $passUser, $msgno, $carpetaOrigen, $carpetaFinal) {
+        //tipo Bandeja
+        // 1. Recibidos (IMBOx)
+        // 2. Saliente (Sent)
+        // 3. Enviados (Trash)
+        
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+
+        // comprobamos si existe la carpeta
+        $list = imap_list($mbox, $server, "*");
+        if (array_search($server . $carpetaFinal, $list) === false) {
+            imap_createmailbox($mbox, imap_utf7_encode($server . $carpetaFinal));
+        }
+ 
+        imap_reopen($mbox, $server.$carpetaOrigen);
+       
+        imap_mail_move($mbox, $msgno, $carpetaFinal);
+        
+        imap_close($mbox);
+        
+        GEST_CORREO::borrarCorreoCarpetaAdicional($de, $passUser, $msgno, null, $carpetaOrigen);
        
     }
     

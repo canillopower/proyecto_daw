@@ -10,6 +10,7 @@ $correosLeidos = [];
 $correosNoLeidos = [];
 $correosEnviados = [];
 $correosBorrados = [];
+$otrosBuzones = [];
 $usuario = null;
 $erroresEnvioCorreo = [];
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
@@ -100,6 +101,29 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
                     $bandeja);
         }
     }
+    
+    // se ha pulsado borrar sobre carpeta adicional
+    if (isset($_POST['borrarEmailDefinitivo5']) && !empty($_POST['borrarEmailDefinitivo5'])
+             && isset($_POST['nombreCarpetaOrigen']) && !empty($_POST['nombreCarpetaOrigen'])) {
+        
+           $msgno = null;
+            $message_id = null;
+            
+            if (isset($_POST['msgno'])) {
+                $msgno = $_POST['msgno'];
+            }
+            
+            if (isset($_POST['message_id'])) {
+                $message_id = $_POST['message_id'];
+            }
+            
+         GEST_CORREO::borrarCorreoCarpetaAdicional(
+                    $usuario->getCorreo(),
+                    $usuario->getPassword(),
+                    $msgno,
+                    $message_id,
+                    $_POST['nombreCarpetaOrigen']);
+    }
 
     //  enviar correo
     if (isset($_POST['correoEnviar']) 
@@ -146,6 +170,10 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         
         if (isset($_POST['correoCC']) 
             && !empty($_POST['correoCC'])) {
+            
+            // si la lista esta vacia, el para puede ir vacio
+            unset($erroresEnvioCorreo[0]);
+            
               // controlamos si se  ha seleccionado una lista de distribuccion
             if (isset($_POST['listas_districomboCC'])) {
                 foreach ($usuario->getListaDistri() as $nombreLista => $arrayDirecciones) {
@@ -193,14 +221,56 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
          } 
     }
 
+    
+    if (isset($_POST['archivar'])
+            && isset($_POST['nombreCarpetaOrigen']) && !empty($_POST['nombreCarpetaOrigen'])
+            && isset($_POST['nombreCarpetaFinal']) && !empty($_POST['nombreCarpetaFinal'])) {
+        
+        if (isset($_POST['msgno']) || isset($_POST['message_id'])) {
+            GEST_CORREO::moverCorreoCarpeta(
+                    $usuario->getCorreo(),
+                    $usuario->getPassword(),
+                    $_POST['msgno'], 
+                    $_POST['nombreCarpetaOrigen'],
+                    $_POST['nombreCarpetaFinal']);
+        }
+    }
 
     // 1. Recibidos (IMBOx)
     // 2. Saliente (Sent)
     // 3. Basura (Trash)
+    
+    // recupero nediante un array asociativa todos los correos
+    $todosLosCorreos = GEST_CORREO::recuperarCorreosPorBandeja($usuario->getCorreo(), $usuario->getPassword());
+    
+    
+   /* $bandejaEntrada =   GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 1);
+    $bandejaSalida =    GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 2);
+    $bandejaEliminado = GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 3);
+*/
+    $bandejaEntrada =  null;
+    $bandejaSalida =    null;
+    $bandejaEliminado = null;
+    
+    foreach ($todosLosCorreos as $nombreBuzon => $correosDelBuzon) {
+        // gestiono las carpetas basicas
+        if ("INBOX" == $nombreBuzon) {
+            $bandejaEntrada = $correosDelBuzon;
+        } elseif ("Sent" == $nombreBuzon) {
+            $bandejaSalida = $correosDelBuzon;
+        } elseif ("Trash" == $nombreBuzon) {
+            $bandejaEliminado = $correosDelBuzon;
+        } else {
+            $otrosBuzones[$nombreBuzon] = $correosDelBuzon;
+        }
+        
+        
+    }
+    /*
     $bandejaEntrada =   GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 1);
     $bandejaSalida =    GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 2);
     $bandejaEliminado = GEST_CORREO::recuperarCorreo($usuario->getCorreo(), $usuario->getPassword(), 3);
-
+    */
     //clasificamos los correos
     // 1 LEIDO
     // 2 NO LEIDO
@@ -209,38 +279,45 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
     // 
     // Seen, \Answered, \Flagged, \Deleted, y \Draft 
 
-    if ($bandejaEntrada != null && count($bandejaEntrada) > 0) {
+    if ($bandejaEntrada != null && is_array($bandejaEntrada) &&  count($bandejaEntrada) > 0) {
         foreach ($bandejaEntrada as $correoUsuario) {
+            if ($correoUsuario != null) {
+                if ($correoUsuario->getDatosCabecera()->seen == 0) {
+                    $correosNoLeidos[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
+                } elseif ($correoUsuario->getDatosCabecera()->seen == 1) {
+                    $correosLeidos[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
+                }
+            }
+            
+        }
+    }
 
-            if ($correoUsuario->getDatosCabecera()->seen == 0) {
-                $correosNoLeidos[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
-            } elseif ($correoUsuario->getDatosCabecera()->seen == 1) {
-                $correosLeidos[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
+    if ($bandejaSalida != null && is_array($bandejaSalida) && count($bandejaSalida) > 0) {
+
+        foreach ($bandejaSalida as $correoUsuario) {
+            if ($correoUsuario != null) {
+                $correosEnviados[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
             }
         }
     }
 
-    if ($bandejaSalida != null && count($bandejaSalida) > 0) {
-        foreach ($bandejaSalida as $correoUsuario) {
-            $correosEnviados[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
-        }
-    }
+    if ($bandejaEliminado != null && is_array($bandejaEliminado) &&  count($bandejaEliminado) > 0) {
 
-    if ($bandejaEliminado != null && count($bandejaEliminado) > 0) {
         foreach ($bandejaEliminado as $correoUsuario) {
-            $correosBorrados[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
+            if ($correoUsuario != null) {
+                $correosBorrados[$correoUsuario->getDatosCabecera()->msgno] = $correoUsuario;
+            }
         }
     }
 }
 
-  function montarMensaje($correoUsuario, $tipoCorreo) {
+  function montarMensaje($correoUsuario, $tipoCorreo, $nombreCarpeta) {
     // tipos correo
     //  NO LEIDO
     // LEIDO
     // BORRADO
     // ENVIADO
 
-    $htmlEmail = '';
     $asunto = $correoUsuario->getDatosCabecera()->subject;
     if ($asunto == null || empty($asunto)) {
         $asunto = "No tiene asunto relacionado";
@@ -252,7 +329,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
     echo "<form action='bandeja_entrada.php' method='post'>";
     // guardo los datos
     echo "<input type='hidden' name='msgno' value='" . $correoUsuario->getDatosCabecera()->msgno . "'>";
-    
+    echo "<input type='hidden' name='nombreCarpetaOrigen' value='" . $nombreCarpeta. "'>";
     
     echo '<label onclick="mostrar(\'' . $correoUsuario->getDatosCabecera()->message_id . '\');" return false; />' . $cabecera . '</label> </br>';
     
@@ -268,7 +345,12 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         echo "<input type='submit' name='borrarEmailDefinitivo3' value='Borrar definitivamente'>";
     } else if ($tipoCorreo == 4) {
         echo "<input type='submit' name='borrarEmailDefinitivo4' value='Borrar definitivamente'>";
-    }
+    } 
+       
+    
+    echo "<input type='submit' name='archivar' value='Archivar'>";
+    echo "<input type='text' name='nombreCarpetaFinal'>";
+    
 
     // si es  no leido o leido,  se puede contestar,
     if ($tipoCorreo == 1 || $tipoCorreo == 2) {
@@ -289,7 +371,38 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
     echo "</div>";
     echo "</form>";
     echo "</br>";
-    return $htmlEmail;
+  
+}
+
+function montarMensajeCarpetaAdiciona($correoUsuario, $nombreCarpeta) {
+    // tipos correo
+    //  NO LEIDO
+    // LEIDO
+    // BORRADO
+    // ENVIADO
+
+    $asunto = $correoUsuario->getDatosCabecera()->subject;
+    if ($asunto == null || empty($asunto)) {
+        $asunto = "No tiene asunto relacionado";
+    }
+    $de = $correoUsuario->getDatosCabecera()->from;
+    $fecha = $correoUsuario->getDatosCabecera()->date;
+    $cabecera = "Fecha: " . $fecha . ". Enviado por " . $de . ". con el asunto " . $asunto;
+
+    echo "<form action='bandeja_entrada.php' method='post'>";
+    // guardo los datos
+    echo '<label>' . $cabecera . '</label> </br>';
+    echo "<input type='hidden' name='msgno' value='" . $correoUsuario->getDatosCabecera()->msgno . "'>";
+    echo "<input type='hidden' name='nombreCarpetaOrigen' value='" . $nombreCarpeta. "'>";
+    
+    echo "<input type='submit' name='borrarEmailDefinitivo5' value='Borrar definitivamente'>";
+    
+    echo "<input type='submit' name='archivar' value='Archivar'>";
+    echo "<input type='text' name='nombreCarpetaFinal'>";
+ 
+    echo "</form>";
+    echo "</br>";
+  
 }
 
 
@@ -310,7 +423,7 @@ function montarListaDistri($usuario, $divId) {
     } else {
         echo "*** No tiene lista de distribución creada";
     }
-    echo "<input type='submit' name='crearListaDistri' value='Crear listas distrubución'>";
+    echo "<input type='submit' name='crearListaDistri' value='Gestionar listas distrubución'>";
     echo "</div>";
 }
 
@@ -417,10 +530,21 @@ echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2
                 <!-- insertamos la tabla con los correos entrantes-->
                 <p>Estado correos (pulsar para ver bandeja)</p>
                 <ul>
+                    
                     <li onclick="mostrar('correo_no_leido'); return false" >Nuevos: <?php echo count($correosNoLeidos); ?></li>
                     <li onclick="mostrar('correo_leido'); return false" >Recibidos:  <?php echo count($correosLeidos); ?> </li>
                     <li onclick="mostrar('enviados'); return false" >Enviados: <?php echo count($correosEnviados); ?></li>
                     <li onclick="mostrar('eliminados'); return false" >Eliminados: <?php echo count($correosBorrados); ?></li>
+                    <?php 
+                        // mostramos la carpetas de manera dinamica
+                        if (is_array($otrosBuzones) && count($otrosBuzones)) {
+                            foreach ($otrosBuzones as $nombreBuzon => $correosDelBuzon) {
+                                $elementosBuzon = count($correosDelBuzon) - 1;
+                                echo '<li onclick="mostrar(\'buzon_' . $nombreBuzon . '\'); return false" >'.$nombreBuzon.' : '.$elementosBuzon.'</li>';
+                            }
+                        }
+                    
+                    ?>
                 </ul>
 
 
@@ -431,7 +555,7 @@ echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2
                     <?php
                     // CORREO NO LEIDO
                     foreach ($correosNoLeidos as $correoUsuario) {
-                      echo montarMensaje($correoUsuario, 1);
+                      echo montarMensaje($correoUsuario, 1, "INBOX");
                     }
                     ?>
                 </div>
@@ -441,7 +565,7 @@ echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2
                     <?php
                     // CORREO LEIDO
                     foreach ($correosLeidos as $correoUsuario) {
-                            echo montarMensaje($correoUsuario, 2);
+                            echo montarMensaje($correoUsuario, 2, "INBOX");
                     }
                     ?>
                 </div>
@@ -451,7 +575,7 @@ echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2
                     <?php
                     // CORREO ELIMINADO
                     foreach ($correosBorrados as $correoUsuario) {
-                       echo montarMensaje($correoUsuario, 3);
+                       echo montarMensaje($correoUsuario, 3, "Trash");
                     }
                     ?>
                 </div>
@@ -461,10 +585,30 @@ echo $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2
                     <?php
                     // CORREO ENVIADO
                     foreach ($correosEnviados as $correoUsuario) {
-                     echo montarMensaje($correoUsuario, 4);
+                     echo montarMensaje($correoUsuario, 4, "Sent");
                     }
                     ?>
                 </div>
+                
+                 <!--resto de buzones -->
+                    <?php
+                    // CORREO ENVIADO
+                    if (is_array($otrosBuzones) && count($otrosBuzones)) {
+                            foreach ($otrosBuzones as $nombreBuzon => $correosDelBuzon) {
+                                echo ' <div id="buzon_'.$nombreBuzon.'" style="display: none">';
+                                echo ' <label><strong>'.$nombreBuzon.'</strong></label></br>';
+                               
+                                foreach ($correosDelBuzon as $correoUsuario) {
+                                    if ($correoUsuario != null) {
+                                        echo montarMensajeCarpetaAdiciona($correoUsuario, $nombreBuzon);
+                                    }
+                                    
+                                }
+                                echo ' </div>';
+                                
+                            }
+                        }
+                    ?>
 
         </div>
     </body>
