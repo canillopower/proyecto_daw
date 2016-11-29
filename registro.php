@@ -8,6 +8,11 @@ $datos = [];
 session_start();
 
 
+
+if (isset($_POST['salir'])) {
+      header("Location: login.php");
+}
+
 $usuario = null;
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO']) && isset($_SESSION['MODIFICAR'])) {
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
@@ -122,7 +127,8 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > REGISTO USUARIOS</title>
-        <link href="tienda.css" rel="stylesheet" type="text/css">
+        <link href="css/comun.css" rel="stylesheet" type="text/css">
+        <link href="css/login.css" rel="stylesheet" type="text/css">
     </head>
 
     <body>
@@ -133,7 +139,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                     
                     <div>
                         <label for='correo' >Correo:</label><br/>
-                        <input type='text' name='correo' id='correo' maxlength="50"  
+                        <input class='campoTexto' type='text' name='correo' id='correo' maxlength="50"  
                             <?php 
                                 if ($usuario != null) { echo "disabled = true value = '".$usuario->getCorreo()."' ";} 
                             ?>
@@ -148,7 +154,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                     
                     <div>
                         <label for='password' >Contraseña:</label><br/>
-                        <input type='password' name='password' id='password' maxlength="50" 
+                        <input class='campoTexto' type='password' name='password' id='password' maxlength="50" 
                            <?php 
                                 if ($usuario != null) { echo " value = '".$usuario->getPassword()."' ";} 
                             ?>
@@ -162,7 +168,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
 
                     <div>
                         <label for='nombre' >Nombre:</label><br/>
-                        <input type='text' name='nombre' id='nombre' maxlength="50" 
+                        <input class='campoTexto' type='text' name='nombre' id='nombre' maxlength="50" 
                                <?php 
                                 if ($usuario != null) { echo " value = '".$usuario->getNombre()."' ";} 
                             ?>
@@ -177,7 +183,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                     
                     <div>
                         <label for='ape_1' >Primer apellido:</label><br/>
-                        <input type='text' name='ape_1' id='ape_1' maxlength="50" 
+                        <input class='campoTexto' type='text' name='ape_1' id='ape_1' maxlength="50" 
                                <?php 
                                 if ($usuario != null) { echo " value = '".$usuario->getApe1()."' ";} 
                             ?>
@@ -192,7 +198,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
 
                     <div>
                         <label for='ape_2' >Segundo apellido:</label><br/>
-                        <input type='text' name='ape_2' id='ape_2' maxlength="50" 
+                        <input class='campoTexto' type='text' name='ape_2' id='ape_2' maxlength="50" 
                                <?php 
                                 if ($usuario != null) { echo " value = '".$usuario->getApe2()."' ";} 
                             ?>
@@ -207,7 +213,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                     
                     <div>
                         <label for='sexo' >Sexo:</label><br/>
-                        <select name='sexo' id ='sexo'>
+                        <select class='combo' name='sexo' id ='sexo'>
                             <option value='1'
                                     <?php 
                                 if ($usuario != null && $usuario->getSexo() == 1) { echo " selected = true ";} 
@@ -221,7 +227,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                     
                     <div>
                         <label for='localidad' >Localidad:</label><br/>
-                        <input type='text' name='localidad' id='localidad' maxlength="50" 
+                        <input class='campoTexto' type='text' name='localidad' id='localidad' maxlength="50" 
                                <?php 
                                 if ($usuario != null) { echo " value = '".$usuario->getLocalidad()."' ";} 
                             ?>
@@ -240,15 +246,15 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                         <?php 
                       
                             if ($usuario != null) {
-                                echo "<input type='submit' name='modificar' value='Modificar' />";
+                                echo "<input class='boton1' type='submit' name='modificar' value='Modificar' />";
                             } else {
-                                echo "<input type='submit' name='registrarse' value='Registrarse' />";
+                                echo "<input class='boton1' type='submit' name='registrarse' value='Registrarse' />";
                             }
                         ?>
                         
                     </div>                   
-                    
-                    
+                    <br/>
+                    <input class="boton1" type='submit' name='salir' value='Salir' />
                 </fieldset>
             </form>
         </div>

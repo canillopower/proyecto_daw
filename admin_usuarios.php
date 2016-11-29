@@ -13,41 +13,34 @@ if (isset($_POST['salir'])) {
       header("Location: login.php");
 }
 
-if (isset($_POST['activar']) && isset($_POST['id_usuario']) && isset($_POST['correo_usuario'])) {
-    // si la operacion es activar, tenemos que cambiar el etado del usuario en BBDD
-    $datos["ID_USUARIO"] = $_POST['id_usuario'];
-    $datos["ID_ESTADO_USUARIO"] = "2"; // cambiamos de inactivo 1 a 2 activo
-    DB::insertarOactualizarUsuario("UPDATE", $datos);
 
-    GEST_CORREO::enviarCorreoBienvenida(
-            $_SESSION['ID_USUARIO'],
-            $_SESSION['PASSWORD'],
-            $_POST['correo_usuario'],
-            "activada");
+if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado'])) {
+    // hacemos split de los valores
+    $valores = split(",", $_POST['cambiarEstado']);
     
-    unset($_POST['activar']);
-    unset($_POST['id_usuario']);
-    unset($_POST['correo_usuario']);
+    if (is_array($valores) && isset($valores[0]) && count($valores) == 3) {
+        
+        $nuevoEstado = null;
+        if ($valores[0] == "activada") {
+            $datos["ID_ESTADO_USUARIO"] = "2"; // cambiamos de inactivo 1 a 2 activo
+        } else {
+            $datos["ID_ESTADO_USUARIO"] = "1"; // cambiamos de activo 2 a 1 inactivo
+        }
 
-} else if (isset($_POST['desactivar']) && isset($_POST['id_usuario']) && isset($_POST['correo_usuario'])){
-        // si la operacion es activar, tenemos que cambiar el etado del usuario en BBDD
-    $datos["ID_USUARIO"] = $_POST['id_usuario'];
-    $datos["ID_ESTADO_USUARIO"] = "1"; // cambiamos de inactivo 1 a 2 activo
-    DB::insertarOactualizarUsuario("UPDATE", $datos);
- 
-     GEST_CORREO::enviarCorreoBienvenida(
-            $_SESSION['ID_USUARIO'],
-            $_SESSION['PASSWORD'],
-            $_POST['correo_usuario'],
-            "desactivada");
-   
-    unset($_POST['desactivar']);
-    unset($_POST['id_usuario']);
-    unset($_POST['correo_usuario']);
+       $datos["ID_USUARIO"] = $valores[1];
+       
+       DB::insertarOactualizarUsuario("UPDATE", $datos);
+
+       GEST_CORREO::enviarCorreoBienvenida(
+               $_SESSION['ID_USUARIO'],
+               $_SESSION['PASSWORD'],
+               $valores[2],
+               "activada");
+
+       unset($_POST['cambiarEstado']);
+
+    }
 }
-
-
-
 
 // cargamos los usuarios de BBDD pendientes de alta
 $usuariosPteAlta = null;
@@ -83,24 +76,38 @@ if (isset($_POST['filtrar'])
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > ADMIN USUARIOS</title>
-        <link href="tienda.css" rel="stylesheet" type="text/css">
+        <link href="css/comun.css" rel="stylesheet" type="text/css">
+        <link href="css/admin.css" rel="stylesheet" type="text/css">
+         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
+
+    <script type="application/javascript">
+
+
+   var cambiarEstado = function(valores) {
+               jQuery.ajax({
+        type: "POST",
+        url: 'admin_usuarios.php',
+        data: {"cambiarEstado": valores}, 
+         success:function(data) {
+             
+         }
+    });
+
+}
+
+</script>
     </head>
 
     <body>
         <div id='registro'>
-            <form action='admin_usuarios.php' method='post'>
-                <fieldset>
-                    <div>  
-                    <legend>Adminitracion usuarios</legend>
-                   
+            <form  action='admin_usuarios.php' method='post'>
                     <fieldset>
-                        
                     <legend>Filtrar usuario</legend>
 
                     <div>
                         
                         <label for='nombre' >Nombre de usuario:</label><br/>
-                        <input type='text' name='nombre' id='nombre' maxlength="50"  value = "<?php 
+                        <input class="campoTexto" type='text' name='nombre' id='nombre' maxlength="50"  value = "<?php 
                             if (isset($_POST['nombre']) && !empty($_POST['nombre'])) {
                                 echo $_POST['nombre'];
                             }
@@ -110,54 +117,85 @@ if (isset($_POST['filtrar'])
                         <input type="radio" name="estado" 
                             <?php 
                                 if (isset($estado) && $estado == 2) echo "checked"; 
-                            ?> value="2">Activo
+                                ?> value="2">Activo</imput>
                         
-                        <input type="radio" name="estado" <?php if (isset($estado) && $estado == 1) echo "checked"; ?> value="1">Inactivo
+                        <input type="radio" name="estado" <?php if (isset($estado) && $estado == 1) echo "checked"; ?> value="1">Inactivo</imput>
                         </br>
-                        <input type='submit' name='filtrar' value='Filtrar' />
+                        <input class="boton2" type='submit' name='filtrar' value='Filtrar' />
                     </div>
+                       
+                    </fieldset>
+                
+            </form>
+            <fieldset >
+                    <legend>Adminitracion usuarios</legend>
+                    <div>  
 
-                </fieldset>
-                     </form>
                     <table>
                         <tr>
                             <th>Nombre</th>
                             <th>Correo</th> 
-                            <th>Activar/Desactivar</th>    
+                            <th>Password</th> 
+                            <th>Inactivo - Activo</th>    
                         </tr>
                    
                     <?php 
                         if (isset($usuariosPteAlta) && count($usuariosPteAlta) >= 0) {
                             foreach ($usuariosPteAlta as $usuario) {
-
+                                echo "<form action='admin_usuarios.php' method='post'>";
                                 $nombre = $usuario->getNombre()." ".$usuario->getApe1()." ".$usuario->getApe2();
                                 echo "<tr>";
                                 echo "<td>".$nombre."</td>";
                                 echo "<td>".$usuario->getCorreo()."</td>";
+                                echo "<td>".$usuario->getPassword()."</td>";
                                 // si estado inactivo solo puedo 
                                
                                 echo "<input type='hidden' name='id_usuario' value = '".$usuario->getId()."'/>";
                                 echo "<input type='hidden' name='correo_usuario' value = '".$usuario->getCorreo()."'/>";
-                                if ("1" == $usuario->getEstado()) {    
-                                    echo "<td><input type='submit' name='activar' value='Activar' /></td>";
-                                    echo "<td><input disabled ='true' type='submit' name='desactivar' value='Desactivar' /></td>";
-                                } else if ("2" == $usuario->getEstado()) {
-                                    echo "<td><input disabled ='true' type='submit' name='activar' value='Activar' /></td>";
-                                    echo "<td><input type='submit' name='desactivar' value='Desactivar' /></td>";
+                                echo "<input type='hidden' name='correo_pass' value = '".$usuario->getPassword()."'/>";
+
+                                echo "<td>";
+                                
+                                if ("1" == $usuario->getEstado()) {  
+                                    $var = 'activada,'.$usuario->getId().','.$usuario->getCorreo();
+                                    echo '<label onclick="cambiarEstado(\'' . $var . '\');" return false; id="labelCheck" name="labelCheck" class="switch" >
+                                    <input type="checkbox" >
+                                    <div class="slider round"></div>
+                                  </label>';
+                                } elseif ("2" == $usuario->getEstado()){
+                                     $var = 'desactivar,'.$usuario->getId().','.$usuario->getCorreo();
+                                    echo '<label onclick="cambiarEstado(\'' . $var . '\');" return false; id="labelCheck" name="labelCheck" class="switch" >
+                                    <input type="checkbox" checked>
+                                    <div class="slider round"></div>
+                                  </label>';
                                 }
+
+                                /*if ("1" == $usuario->getEstado()) {    
+                   
+                                    echo "<td><input class='boton1' type='submit' name='activar' value='Activar' /></td>";
+                                    echo "<td><input class='boton1' disabled ='true' type='submit' name='desactivar' value='Desactivar' /></td>";
+                                } else if ("2" == $usuario->getEstado()) {
+                                
+                                    //echo "<td><input class='boton1' disabled ='true' type='submit' name='activar' value='Activar' /></td>";
+                                    //echo "<td><input class='boton1' type='submit' name='desactivar' value='Desactivar' /></td>";
+                                }*/
                     
                                 echo "</tr>";
+                                
+                                echo "</form>";
                             }
                         }
                     ?>
                     </table>
-            
-                        <input type='submit' name='salir' value='Salir' />
+                        <form action='admin_usuarios.php' method='post'>
+                        <input class="boton1" type='submit' name='salir' value='Salir' />
+                        </form>
                     </div>                   
                 </fieldset>
             </form>
         </div>
     </body>
+   
 </html>
 
 

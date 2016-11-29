@@ -64,7 +64,8 @@ if (isset($_POST['enviar'])) {
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > LOGIN</title>
-        <link href="tienda.css" rel="stylesheet" type="text/css">
+        <link href="css/comun.css" rel="stylesheet" type="text/css">
+        
     </head>
 
     <body>
@@ -75,16 +76,17 @@ if (isset($_POST['enviar'])) {
 
                     <div>
                         <label for='correo' >Correo:</label><br/>
-                        <input type='text' name='correo' id='correo' maxlength="50" /><br/>
+                        <input class="campoTexto" type='text' name='correo' id='correo' maxlength="50" /><br/>
                             <?php
                             if (isset($errores[0])) {
                                 echo "<label>***" . $errores[0] . "</label>";
                             }
                             ?>
                     </div>
+                    <br/>
                     <div>
                         <label for='password' >Contraseña:</label><br/>
-                        <input type='password' name='password' id='password' maxlength="50" /><br/>
+                        <input class="campoTexto" type='password' name='password' id='password' maxlength="50" /><br/>
                             <?php
                             if (isset($errores[1])) {
                                 echo "<label>***" . $errores[1] . "</label>";
@@ -95,7 +97,7 @@ if (isset($_POST['enviar'])) {
                         <p><a href="registro.php" >Registrarse</a></p>
                     </div>
                     <div>
-                        <input type='submit' name='enviar' value='Acceder' />
+                        <input class="boton1" type='submit' name='enviar' value='Acceder' />
                     </div>
                     <div >
                         <label><?php echo $errorOperacion; ?></label><br/>
