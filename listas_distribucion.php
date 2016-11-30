@@ -104,7 +104,7 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > LOGIN</title>
-
+<link href="css/comun.css" rel="stylesheet" type="text/css">
          <script type="application/javascript">
             var mostrar = function(id) {
                 obj = document.getElementById(id);
@@ -115,10 +115,11 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     </head>
 
     <body>
-
+        <fieldset> 
+            <legend>Gestión listas de distribucion</legend>
 <?php
 echo "<p>".$usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2()."</p>";
-echo "<p> Gestión listas de distribucion"
+
 ?>
             
         <form action='listas_distribucion.php' method='post'>
@@ -133,7 +134,7 @@ echo "<p> Gestión listas de distribucion"
                             echo "<form action='listas_distribucion.php' method='post'>";
                             echo "<input type='hidden' name='nombreListaBorrar' value='".$nombreLista."' />";
                             echo '<label onclick="mostrar(\'elementos' . $nombreLista . '\'); return false">'.$nombreLista.'</label>';
-                            echo "<input type='submit' name='borrarLista' value='Borrar lista' /></br>";
+                            echo "<input class = 'botonDelete' type='submit' name='borrarLista'  /></br>";
                             echo "</form>";
                             
                             if (isset($_POST['aniadirElementoLista']) 
@@ -162,7 +163,7 @@ echo "<p> Gestión listas de distribucion"
                                     echo "<input type='hidden' name='nombreListaPadreBorrar' value='".$nombreLista."' />";
                                     echo "<input type='hidden' name='elementoListaBorrar' value='".$elementoLista."' />";
                                     echo '<label >'.$elementoLista.'</label>';
-                                    echo "<input type='submit' name='borrarElementoLista' value='Borrar' /></br>";
+                                    echo "<input class = 'botonDelete2' type='submit' name='borrarElementoLista' /></br>";
                                     
                                     
                                     echo "</form>";
@@ -234,6 +235,6 @@ echo "<p> Gestión listas de distribucion"
                 ?>
                  </form>
          
-        
+        </fieldset>
     </body>
 </html>
