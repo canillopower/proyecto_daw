@@ -72,3 +72,14 @@ form {
 
 
 }
+
+.botonAniadir {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -9999em;
+    background: #EBE3CD url(../images/aniadir.png) no-repeat 5px center;
+
+
+}

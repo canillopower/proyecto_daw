@@ -129,6 +129,37 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
         <title>Kanomail.es > REGISTO USUARIOS</title>
         <link href="css/comun.css" rel="stylesheet" type="text/css">
         <link href="css/login.css" rel="stylesheet" type="text/css">
+        <script>
+        function checkPass()
+{
+    //Store the password field objects into variables ...
+    var pass1 = document.getElementById('password');
+    var pass2 = document.getElementById('password2');
+    //Store the Confimation Message Object ...
+    var message = document.getElementById('confirmMessage');
+    //Set the colors we will be using ...
+    var goodColor = "#66cc66";
+    var badColor = "#ff6666";
+    //Compare the values in the password field 
+    //and the confirmation field
+    if(pass1.value == pass2.value){
+        //The passwords match. 
+        //Set the color to the good color and inform
+        //the user that they have entered the correct password 
+        pass2.style.backgroundColor = goodColor;
+        message.style.color = goodColor;
+        message.innerHTML = "Contraseña correcta!"
+    }else{
+        //The passwords do not match.
+        //Set the color to the bad color and
+        //notify the user.
+        pass2.style.backgroundColor = badColor;
+        message.style.color = badColor;
+        message.innerHTML = "No coincide contraseña!"
+    }
+}  
+        
+        </script>
     </head>
 
     <body>
@@ -141,7 +172,12 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                         <label for='correo' >Correo:</label><br/>
                         <input class='campoTexto' type='text' name='correo' id='correo' maxlength="50"  
                             <?php 
-                                if ($usuario != null) { echo "disabled = true value = '".$usuario->getCorreo()."' ";} 
+                                if ($usuario != null) {
+                                    echo "disabled = true value = '".$usuario->getCorreo()."' ";
+                                    
+                                } else {
+                                    echo "value =  '@kanomail.es'";
+                                }
                             ?>
                                />
                         <br/>
@@ -164,6 +200,15 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                                 echo "<label>***".$error[1]."</label>";
                             }
                          ?>
+                        
+                         <label for='password' >Confirmar contraseña:</label><br/>
+                        <input class='campoTexto' type='password' name='password2' id='password2' maxlength="50" onkeyup="checkPass(); return false;"
+                               
+                               <?php 
+                                if ($usuario != null) { echo " value = '".$usuario->getPassword()."' ";} 
+                            ?>
+                               /><br/>
+                        <span id="confirmMessage" class="confirmMessage"></span>
                     </div>
 
                     <div>

@@ -1,0 +1,78 @@
+.boton1 {
+	border: 1px solid #3366FF;
+	background-color:#B3C6FF;
+        width: 230px;
+        height: 25px;
+}
+.boton1:hover {
+	border: 2px dotted #FF6633;
+	color:#FF6600;
+	font-weight:bold;
+        width: 230px;
+        height: 25px;
+}
+
+fieldset{
+        margin-left: 35%;
+    margin-right: 35%;
+}
+
+body, input, button, select, option, textarea  {
+    background-color: #ffffff;
+    text-align: center;
+    font-family: Segoe UI Light, Helvetica, Arial, sans-serif;
+    font-size: 12pt;
+    
+    
+}
+
+.campoTexto {
+	border:2px solid #456879;
+	border-radius:10px;
+	height: 22px;
+	width: 230px;
+        margin-top: 5px;
+}
+
+.boton2 {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 23px;
+    background: #EBE3CD url(../images/search.png) no-repeat 5px center;
+
+
+}
+
+.botonDelete {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -9999em;
+    background: #EBE3CD url(../images/delete.png) no-repeat 5px center;
+
+
+}
+
+.botonDelete2 {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -1000em;
+    background: #EBE3CD url(../images/delete2.png) no-repeat 5px center;
+
+
+}
+
+.botonAniadir {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -9999em;
+    background: #EBE3CD url(../images/aniadir.png) no-repeat 5px center;
+
+
+}
