@@ -97,7 +97,7 @@ class GEST_CORREO {
 
             foreach ($list as $clave => $valor) {
                 $nombre = str_replace($server, "", imap_utf7_decode($valor->name));
-
+                $todoDatos[$nombre] = null;
                 //un vez obtenido el nombre del buzon, compruebo si existe carpeta, y me traigo sus correos
                 imap_reopen($mbox, $server . $nombre);
 
@@ -115,6 +115,84 @@ class GEST_CORREO {
                     }
                     $todoDatos[$nombre] = $correosDelBuzon;
                 }
+            }
+        }
+
+        imap_close($mbox);
+        return $todoDatos;
+    }
+    
+    
+    public static function recuperarCorreosPorBandejaFiltrada($de, $passUser, $filtros, $filtro) {
+        
+        /* DE, > FROM 
+         * PARA,  > TO
+         * CC,> CC
+         * ASUNTO, > SUBJECT 
+         * TEXTO > TEXT 
+                   
+         */
+        
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+        $list = imap_getmailboxes($mbox, $server, "*");
+        
+         // creamos las carpetas basicas
+        $lista = imap_list($mbox, $server, "*");
+        if (array_search($server . "Sent", $lista) === false) {
+            imap_createmailbox($mbox, imap_utf7_encode($server . "Sent"));
+        }
+
+        if (array_search($server . "Trash", $lista) === false) {
+            imap_createmailbox($mbox, imap_utf7_encode($server . "Sent"));
+        }
+        
+        $todoDatos = array();
+
+        if (is_array($list)) {
+
+            foreach ($list as $clave => $valor) {
+                $nombre = str_replace($server, "", imap_utf7_decode($valor->name));
+                $todoDatos[$nombre] = null;
+                //un vez obtenido el nombre del buzon, compruebo si existe carpeta, y me traigo sus correos
+                imap_reopen($mbox, $server . $nombre);
+
+                // una vez que estoy en la carpeta aplico los criterios de busqueda
+                $criterio = "";
+                if (count($filtros) == 1) {
+                    // si solo tiene un siltro
+                    if ($filtros[0] == 'checkDE') {
+                        $criterio = "FROM ".'"'.$filtro.'"';
+                    } elseif ($filtros[0] == 'checkPARA') {
+                        $criterio = "TO ".'"'.$filtro.'"';
+                    } elseif ($filtros[0] == 'checkCC') {
+                        $criterio = "CC ".'"'.$filtro.'"';
+                    } elseif ($filtros[0] == 'checkASUNTO') {
+                        $criterio = "SUBJECT ".'"'.$filtro.'"';
+                    } elseif ($filtros[0] == 'checkTEXTO') {
+                        $criterio = "TEXT ".'"'.$filtro.'"';
+                    }
+                    $numEmails= imap_search($mbox, $criterio);
+                
+                if (is_array($numEmails) && count($numEmails) > 0) {
+                    
+                    unset($correosDelBuzon);
+                    $correosDelBuzon[] = null;
+                    
+                    foreach ($numEmails as $numMsg) {
+                        
+                        //$head = imap_fetchheader($mbox, $numMsg);
+                        //$head2 = imap_headerinfo($mbox, $numMsg);
+                        $overview = imap_fetch_overview($mbox, $numMsg, 0);
+                        $body = imap_body($mbox, $numMsg, FT_PEEK);
+                        $correo = new Correo($overview[0], $body);
+                        $numCorr = $overview[0]->msgno;
+                        $correosDelBuzon[$numCorr] = $correo;
+                    } 
+                    $todoDatos[$nombre] = $correosDelBuzon;
+                }
+                } 
+                
             }
         }
 
@@ -276,6 +354,19 @@ class GEST_CORREO {
         // 1. Recibidos (IMBOx)
         // 2. Saliente (Sent)
         // 3. Enviados (Trash)
+        
+        if (strtoupper($carpetaFinal) == "NUEVOS" 
+                || strtoupper($carpetaFinal) == "RECIBIDOS") {
+            $carpetaFinal = "INBOX";
+        }
+        
+        if (strtoupper($carpetaFinal) == "ENVIADOS") {
+            $carpetaFinal = "Sent";
+        }
+        if (strtoupper($carpetaFinal) == "ELIMINADOS") {
+            $carpetaFinal = "Trash";
+        }
+        
         
         $server = CONSTANTES::$SERVER;
         $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());

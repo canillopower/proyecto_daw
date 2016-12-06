@@ -1,7 +1,7 @@
 .campoTexto {
 	border:2px solid #456879;
 	border-radius:10px;
-	height: 22px;
+	height: 28px;
 	width: 230px;
         margin-top: 5px;
 }
@@ -45,7 +45,8 @@ form {
     border:2px solid #456879;
     border-radius:10px;
     height: 28px;
-    width: 23px;
+    width: 28px;
+      text-indent: -9000em;
     background: #EBE3CD url(../images/search.png) no-repeat 5px center;
 
 
@@ -80,6 +81,17 @@ form {
     width: 30px;
     text-indent: -9999em;
     background: #EBE3CD url(../images/aniadir.png) no-repeat 5px center;
+
+
+}
+
+.botonArc {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -1000em;
+    background: #EBE3CD url(../images/archivar.png) no-repeat 5px center;
 
 
 }

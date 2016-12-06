@@ -128,7 +128,6 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > REGISTO USUARIOS</title>
         <link href="css/comun.css" rel="stylesheet" type="text/css">
-        <link href="css/login.css" rel="stylesheet" type="text/css">
         <script>
         function checkPass()
 {
