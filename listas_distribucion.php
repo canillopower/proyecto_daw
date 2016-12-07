@@ -1,22 +1,25 @@
 <?php
+// imports
 require_once("auxiliar/GEST_CORREO.php");
 require_once("auxiliar/DB.php");
 require_once("auxiliar/Correo.php");
 session_start();
 
-// recuperamos los correos del usuario
-
-
+// variables generales que se utilizaran en la pantalla
 $usuario = null;
 $erroresAltaLista = [];
 $erroresBorrarLista = [];
 $erroresAltaElementoLista = [];
 $erroresBajaElementoLista = [];
+
+// control acciones
+// como trabajamos osobre la bandeja de entrada, es indipensable que el correo nos
+// llegue en la session
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
 
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
 
-    // si se quiere añadir lista
+    // AÑADIR ELEMENTO A LISTA
     if (isset($_POST['aniadirLista']) && !empty($_POST['aniadirLista'])) {
 
         if (isset($_POST['nombreLista'])) {
@@ -34,6 +37,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         }
     }
 
+    // BORRAR LISTA
     if (isset($_POST['borrarLista']) && !empty($_POST['borrarLista'])) {
 
         if (isset($_POST['nombreListaBorrar']) && !empty($_POST['nombreListaBorrar'])) {
@@ -47,7 +51,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         }
     }
 
-    // si se quiere añadir elemento a la lista lista
+    // AÑADIR CORREO A LISTA
     if (isset($_POST['aniadirElementoLista']) && !empty($_POST['aniadirElementoLista'])) {
 
         if (isset($_POST['nombreElementoLista'])) {
@@ -69,7 +73,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
             }
         }
     }
-    // borramos elemento de la lista
+    // BORRAR CORREO DE LA LISTA
     if (isset($_POST['borrarElementoLista']) && !empty($_POST['borrarElementoLista'])) {
 
         if (isset($_POST['elementoListaBorrar']) && !empty($_POST['elementoListaBorrar']) && isset($_POST['nombreListaPadreBorrar']) && !empty($_POST['nombreListaPadreBorrar'])) {
@@ -80,14 +84,11 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
             }
         }
     }
-
+    // recuperamos los datos del usuario para mostrar por pantalla
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
 }
 
-//acciones
-// - Modificar, reenvia al usuario a la ventana de registro y permite modificar los datos
-// del usuasrio
-// - Salir, redirige a la ventana de Login y borra los datos de session
+// SALIR O MODIFICAR
 if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     header("Location: login.php");
     session_unset();
@@ -96,10 +97,16 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     header("Location: bandeja_entrada.php");
 }
 ?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!-- Desarrollo Web en Entorno Servidor -->
+<!-- Autor: José María Rodríguez García -->
+<!-- Proyecto : Gestor de correo electrónico -->
+<!-- Ventana: listas_distribucion.php Permite al usuario gestionar sus listas de distribucion -->
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
-        <title>Kanomail.es > LOGIN</title>
+        <title>Kanomail.es > LISTAS DISTRIBUCION</title>
         <link href="css/listas.css" rel="stylesheet" type="text/css">
         <script type="application/javascript">
             var mostrar = function(id) {
@@ -219,9 +226,6 @@ echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario-
                 echo "<p>" . $erroresBorrarLista[2] . "</p>";
             }
             ?>
-
-
-         
 
             <form action='listas_distribucion.php' method='post'>
            

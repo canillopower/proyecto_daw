@@ -1,31 +1,30 @@
 <?php
-// añadimos los require necesario
+// imports
 require_once("auxiliar/DB.php");
 
+// variables generales que se utilizaran en la pantalla
 $error = [];
 $errorOperacion ="";
 $datos = [];
 session_start();
+$usuario = null;
 
-
-
+// control acciones
+// SALIR
 if (isset($_POST['salir'])) {
       header("Location: login.php");
 }
 
-$usuario = null;
+// recuperamos los datos del usuario
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO']) && isset($_SESSION['MODIFICAR'])) {
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
 }
 
-
-// control acciones
+// REGISTRARSE O MODIFICAR
 if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
 
     // validamos que todos los campos esten informados
     
-    // correo
-    //if (isset($_POST['correo']) && $_POST['correo'] != '') {
     if (isset($_POST['registrarse'])) {
         if (isset($_POST['correo']) && filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
             $datos['CORREO'] = $_POST['correo'];
@@ -33,8 +32,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
             $error[0] = "El campo correo no puede estar vacio";
         }
     }
-    
-    
+
     // password
     if (isset($_POST['password']) && $_POST['password'] != '') {
         $datos['PASSWORD'] = $_POST['password'];
@@ -122,15 +120,14 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
 <!-- Desarrollo Web en Entorno Servidor -->
 <!-- Autor: José María Rodríguez García -->
 <!-- Proyecto : Gestor de correo electrónico -->
-<!-- Ventna: login.php Permite al usuario logearse o registrarse en la aplicación -->
+<!-- Ventana: registro.php Permite al usuario logearse o registrarse en la aplicación -->
 <html>
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <title>Kanomail.es > REGISTO USUARIOS</title>
         <link href="css/comun.css" rel="stylesheet" type="text/css">
         <script>
-        function checkPass()
-{
+        function checkPass() {
     //Store the password field objects into variables ...
     var pass1 = document.getElementById('password');
     var pass2 = document.getElementById('password2');

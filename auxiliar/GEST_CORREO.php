@@ -1,7 +1,7 @@
 <?php
     require_once("PHPMailer-master/class.phpmailer.php");
     require_once("PHPMailer-master/class.smtp.php");
-    require_once("CONSTANTES.phP");
+    require_once("CONSTANTES.php");
 
 class GEST_CORREO {
     

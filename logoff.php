@@ -4,5 +4,7 @@
     
     // Y la eliminamos
     session_unset();
+    
+    // redireccionamos a la ventana de login
     header("Location: login.php");
 ?>

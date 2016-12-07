@@ -1,17 +1,11 @@
 <?php
-
-/**
- * Description of Usuario
- *
- * @author José María Rodríguez Garcia
+/*
+ * @author José María Rodríguez García
  */
 class Correo {
 
-    protected $datosCabecera;
-    protected $cuerpoEmail;
-    // Seen, \Answered, \Flagged, \Deleted, y \Draft 
-   
-    
+    protected $datosCabecera; // datos de cabecera del correo electronico
+    protected $cuerpoEmail; // cuerpo del correo electronico
 
     public function __construct($datosCabecera, $cuerpoEmail) {
         $this->datosCabecera = $datosCabecera;

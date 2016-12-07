@@ -1,10 +1,9 @@
 <?php
 
 /**
- * Description of Usuario
- *
  * @author José María Rodríguez Garcia
  */
+
 class Usuario {
 
     // atributos de la clase

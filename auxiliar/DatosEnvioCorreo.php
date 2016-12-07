@@ -1,10 +1,8 @@
 <?php
-
-/**
- * Description of DatosEnvioCorreo
- *
- * @author Kano
+/*
+ * @author José María Rodríguez García
  */
+
 class DatosEnvioCorreo {
 
     protected $ID_CORREO;
