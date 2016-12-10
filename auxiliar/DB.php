@@ -7,7 +7,6 @@
 // imports
 require_once('Usuario.php');
 require_once('Correo.php');
-require_once('DatosEnvioCorreo.php');
 require_once("CONSTANTES.php");
 
 class DB {
