@@ -39,6 +39,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         GEST_CORREO::responderCorreo(
                 $usuario->getCorreo(),
                 $usuario->getPassword(),
+                $usuario->getNombre()." ".$usuario->getApe1(),
                 $quienEnvio,
                 $_POST['bodyCorreo'],
                 "RE: ".$_POST['subject']);
@@ -141,8 +142,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
     }
 
     // ENVIAR CORREO
-    if (isset($_POST['correoEnviar']) 
-        && !empty($_POST['correoEnviar'])) {
+    if (isset($_POST['correoEnviar']) && !empty($_POST['correoEnviar'])) {
         
         $para = null;
         $arrayDireccionesPara = null;
@@ -151,33 +151,45 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         $texto = null;                
         // validamos que los correos son validas
         if (isset($_POST['correoPara']) 
-            && !empty($_POST['correoPara'])) {
+                ||
+                isset($_POST['listas_districomboPara'])) {
+            
+            // si viene para lo guardamos
+            if (isset($_POST['correoPara']) && !empty($_POST['correoPara'])) {
+                $arrayDireccionesPara[]  = $_POST['correoPara'];
+            }
             
             // controlamos si se  ha seleccionado una lista de distribuccion
             if (isset($_POST['listas_districomboPara'])) {
                 foreach ($usuario->getListaDistri() as $nombreLista => $arrayDirecciones) {
                     if ($nombreLista == $_POST['listas_districomboPara']) {
                          foreach ($arrayDirecciones as $direccion) {
-                             $arrayDireccionesPara[] = $direccion."; ";
+                             $arrayDireccionesPara[] = $direccion;
                          }
                     }
                 }
+            } else {
+                  $erroresEnvioCorreo[0] = "Debe seleccionar al menos una lista distribución"; 
             }
             
-            $arrayDireccionesParaAux = explode("; ", $_POST['correoPara']);
-            foreach ($arrayDireccionesParaAux as $direc) {
+            //$arrayDireccionesParaAux = explode(";", $_POST['correoPara']);
+            /*foreach ($arrayDireccionesParaAux as $direc) {
                 $arrayDireccionesPara[] = $direc;
-            }
+            }*/
             
-            if (count($arrayDireccionesPara) > 0) {
+            // validamos las direcciones de correo
+            if (!isset($erroresEnvioCorreo[0]) && count($arrayDireccionesPara) > 0) {
                 foreach ($arrayDireccionesPara as $direccion) {
-                    if (!filter_var($direccion, FILTER_VALIDATE_EMAIL)) {
+                    if (!empty($direccion) && !filter_var($direccion, FILTER_VALIDATE_EMAIL)) {
                         $erroresEnvioCorreo[1] = "La dirección ".$direccion." no cumple el formato requerido"; 
                     }
                 } 
             }
         } else {
             $erroresEnvioCorreo[0] = 'El campo para no puede estar vacio';  
+        }
+        if ($arrayDireccionesPara == null || empty($arrayDireccionesPara)) {
+            $erroresEnvioCorreo[0] = 'Es necesario informar el campo para o seleccionar una lista distribucción';
         }
         
         if (isset($_POST['correoCC']) 
@@ -226,6 +238,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
              GEST_CORREO::enviarCorreo(
                     $usuario->getCorreo(),
                     $usuario->getPassword(),
+                    $usuario->getNombre()." ".$usuario->getApe1(), 
                      $arrayDireccionesPara,
                      $arrayDireccionesCC,
                      $asunto,
@@ -248,6 +261,21 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         }
     }
 
+    if (isset($_POST['deleteCarpeta']) &&
+            isset($_POST['bandejaDelete'])) {
+        
+        $seen = null;
+        if (isset($_POST['seen'])) {
+            $seen = $_POST['seen'];
+        }
+        GEST_CORREO::borrarTodosCorreosPorBandeja(
+                $usuario->getCorreo(),
+                $usuario->getPassword(),
+                $_POST['bandejaDelete'],
+                $seen);    
+        
+    }
+    
     // 1. Recibidos (IMBOx)
     // 2. Saliente (Sent)
     // 3. Basura (Trash)
@@ -357,24 +385,37 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         $asunto = "No tiene asunto relacionado";
     }
     $de = $correoUsuario->getDatosCabecera()->from;
-    $fecha = $correoUsuario->getDatosCabecera()->date;
+      
+    $unixTimestamp=strtotime($correoUsuario->getDatosCabecera()->date);
+    $fecha = date("Y-m-d H:i:s", $unixTimestamp);
     
-    $cabecera = "Fecha: " . $fecha . ".<br/> De: " . $de . ".<br/> Asunto " . $asunto;
+    
+    $cabecera = "<strong>Fecha:</strong> " . $fecha . ".<br/> <strong>De:</strong> " . $de . ".<br/> <strong>Asunto:</strong> " . $asunto;
 
     echo "<form class = 'formInterno' action='bandeja_entrada.php' method='post'>";
     // guardo los datos
     echo "<input type='hidden' name='msgno' value='" . $correoUsuario->getDatosCabecera()->msgno . "'>";
     echo "<input type='hidden' name='nombreCarpetaOrigen' value='" . $nombreCarpeta. "'>";
     
-    echo '<label onclick="mostrar(\'' . $correoUsuario->getDatosCabecera()->message_id . '\');" return false; />' . $cabecera . '</label> </br>';
+    echo '<label onclick="mostrar(\''.$nombreCarpeta . $correoUsuario->getDatosCabecera()->message_id . '\');" return false; />' . $cabecera . '</label> </br>';
     
-    echo "<div id='" . $correoUsuario->getDatosCabecera()->message_id . "' style='display:none'>";
-    echo $correoUsuario->getCuerpoEmail();
-    echo "</br>";
+    echo "<div id='".$nombreCarpeta . $correoUsuario->getDatosCabecera()->message_id . "' style='display:none'>";
+    
+     if ($tipoStilo == 1) {
+         echo "<div class ='cuerpoEmail2'><p><strong>Cuerpo: </strong> ".$correoUsuario->getCuerpoEmail()."</p></div>";
+     } else {
+         echo "<div class ='cuerpoEmail1'><p><strong>Cuerpo: </strong> ".$correoUsuario->getCuerpoEmail()."</p></div>";
+     }
+    
+    
+    
+    echo "<input class ='campoTextoMover' type='text' name='nombreCarpetaFinal'>";
+    echo "<input class ='botonArc' type='submit' name='archivar' value='Archivar'>";
+    
     if ($tipoCorreo == 1 || $tipoCorreo == 2) {
         echo "<input <input class ='botonDelete' type='submit' name='borrarEmail' value='Borrar'>";
         if ($tipoCorreo == 1) {
-           echo "<input type='submit' name='marcarComoLeido' value='Marcar leido'>";
+           echo "<input class ='botonLeido' type='submit' name='marcarComoLeido' value='Marcar leido'>";
         }
     } else if ($tipoCorreo == 3) {
         echo "<input class ='botonDelete2' type='submit' name='borrarEmailDefinitivo3' value='Borrar definitivamente'>";
@@ -382,9 +423,8 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
         echo "<input <input class ='botonDelete2'type='submit' name='borrarEmailDefinitivo4' value='Borrar definitivamente'>";
     } 
        
-    
-    echo "<input class ='botonArc' type='submit' name='archivar' value='Archivar'>";
-    echo "<input class ='campoTexto' type='text' name='nombreCarpetaFinal'>";
+   
+   
     echo "<br/>";
 
     // si es  no leido o leido,  se puede contestar,
@@ -435,8 +475,11 @@ function montarMensajeCarpetaAdiciona($correoUsuario, $nombreCarpeta, $tipoStilo
         $asunto = "No tiene asunto relacionado";
     }
     $de = $correoUsuario->getDatosCabecera()->from;
-    $fecha = $correoUsuario->getDatosCabecera()->date;
-    $cabecera = "Fecha: " . $fecha . ".<br/> De: " . $de . ".<br/> Asunto " . $asunto;
+    
+    $unixTimestamp=strtotime($correoUsuario->getDatosCabecera()->date);
+    $fecha = date("Y-m-d H:i:s", $unixTimestamp);
+    
+    $cabecera = "<strong>Fecha:</strong> " . $fecha . ".<br/> <strong>De:</strong> " . $de . ".<br/> <strong>Asunto:</strong> " . $asunto;
 
     echo "<form class='formInterno' action='bandeja_entrada.php' method='post'>";
     // guardo los datos
@@ -444,11 +487,10 @@ function montarMensajeCarpetaAdiciona($correoUsuario, $nombreCarpeta, $tipoStilo
     echo "<input type='hidden' name='msgno' value='" . $correoUsuario->getDatosCabecera()->msgno . "'>";
     echo "<input type='hidden' name='nombreCarpetaOrigen' value='" . $nombreCarpeta. "'>";
     
+    echo "<input class ='campoTextoMover' type='text' name='nombreCarpetaFinal'>";
+    echo "<input class ='botonArc' type='submit' name='archivar' value='Archivar'>";
     echo "<input <input class ='botonDelete2' type='submit' name='borrarEmailDefinitivo5' value='Borrar definitivamente'>";
     
-    echo "<input class ='botonArc' type='submit' name='archivar' value='Archivar'>";
-    echo "<input class ='campoTexto' type='text' name='nombreCarpetaFinal'>";
- 
     echo "</form>";
     echo "</br>";
     echo "</div>";
@@ -492,6 +534,12 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
     $_SESSION['MODIFICAR'] = "1";
     header("Location: registro.php");
 }
+
+// ADMIN USUARIPS
+if (isset($_POST['admin']) && !empty($_POST['admin'])) {
+    header("Location: admin_usuarios.php");
+}
+
 ?>
 
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
@@ -523,7 +571,7 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
 
 
                 <?php
-                echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2() . "</p>";
+                echo "<h3>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2() . "</h3>";
                 ?>
 
                 <form class ="formInterno" action='bandeja_entrada.php' method='post'>
@@ -533,48 +581,61 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
                     <input class="boton1" type='submit' name='salir' value='Salir' />
                     <br/>    
                     <br/>
+                       <?php
+                // si es administador, puede volver a la bandeja de administracion
+                if ("1" == $usuario->getTipo()) {
+                    echo '<input class="boton1" type="submit" name="admin" value="Admin. usuarios" /> <br/> <br/>';
+                }
+                ?>
+                    
                     <hr>
-                    <label onclick="mostrar('ventana_envio'); return false" >Redactar mensaje </label><br/>    
+                    <label onclick="mostrar('ventana_envio'); return false" ><strong>Redactar mensaje</strong> </label><br/>    
 
                     <!-- ventana de envio de mensajes -->
                     <?php
                     if ($erroresEnvioCorreo != null && count($erroresEnvioCorreo) > 0) {
                         echo "<div id='ventana_envio' style='display: block'>";
-                        echo " *** Se han producido errores de validación al intentar enviarlo, revise los campos";
+                        echo "  <div class='error'> Se han producido errores de validación al intentar enviarlo, revise los campos </div>";
                         echo "</br>";
                     } else {
                         echo "<div id='ventana_envio' style='display: none'>";
                     }
                     ?>
                     <br/>
-                    <label>De:  </label>
-                    <input class ="campoTexto" type='text' name='correoDe' id='correoDe' maxlength="50" disabled = "true" value=" <?php echo $usuario->getCorreo() ?>"/>
-                    <br/>
-                    <br/>
-                    <label>Para:</label>
-                    <input class ="campoTexto" type='text' name='correoPara' id='correoPara' maxlength="50"  <?php
+                    <table>
+                        <tr>
+                            <td> <label>De:  </label></td>
+                            <td><input class ="campoTexto" type='text' name='correoDe' id='correoDe' maxlength="50" disabled = "true" value=" <?php echo $usuario->getCorreo() ?>"/></td>
+                            
+                        </tr>
+                        <tr>
+                            <td> <label>Para:</label></td>
+                            <td> <input class ="campoTexto" type='text' name='correoPara' id='correoPara' maxlength="50"  <?php
                     if (isset($_POST['correoPara'])) {
                         echo "value = '" . $_POST['correoPara'] . "'";
                     }
                     ?> />
-                           <?php
-                           if (isset($erroresEnvioCorreo[0])) {
-                               echo "<label>***" . $erroresEnvioCorreo[0] . "</label>";
-                           }
-                           if (isset($erroresEnvioCorreo[1])) {
-                               echo "<label>***" . $erroresEnvioCorreo[1] . "</label>";
-                           }
-                           ?>
+                         
 
                     <!-- OCULTAMOS LE DIV DEL COMBO DE DIRECCIONES -->
-                    <label onclick="mostrar('comboPara'); return false" > + </label>
-                    <br/>
+                    <label onclick="mostrar('comboPara'); return false" > + </label> <br/>
+                      <?php
+                           if (isset($erroresEnvioCorreo[0])) {
+                               echo "<div class='error'>" . $erroresEnvioCorreo[0] . "</div>";
+                           }
+                           if (isset($erroresEnvioCorreo[1])) {
+                               echo "<div class='error'>" . $erroresEnvioCorreo[1] . "</div>";
+                           }
+                           ?>
+                   
                     <?php
                     echo montarListaDistri($usuario, "comboPara");
-                    ?>
-                    <br/>
-                    <label>CC:</label>
-                    <input class ="campoTexto" type='text' name='correoCC' id='correoCC' maxlength="50"  />
+                    ?></td>
+                        </tr>
+                        
+                        <tr>
+                            <td> <label>CC:</label></td>
+                            <td> <input class ="campoTexto" type='text' name='correoCC' id='correoCC' maxlength="50"  />
                     <!-- OCULTAMOS LE DIV DEL COMBO DE DIRECCIONES -->
 
                     <label onclick="mostrar('comboCC'); return false" > + </label>
@@ -585,14 +646,17 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
 
                     <?php
                     if (isset($erroresEnvioCorreo[3])) {
-                        echo "<label>***" . $erroresEnvioCorreo[3] . "</label>";
+                        echo "<div class='error'>" . $erroresEnvioCorreo[3] . "</div>";
                     }
-                    ?>
+                    ?></td>
+                        </tr>
+                        <tr>
+                            <td><label>Asunto:</label></td>
+                            <td> <input class ="campoTexto" type='text' name='correoAsunto' id='correoAsunto' maxlength="50"  /></td>
+                        </tr>
+                    </table>
                     <br/>
-                    <label>Asunto:</label>
-                    <input class ="campoTexto" type='text' name='correoAsunto' id='correoAsunto' maxlength="50"  />
-                    <br/>
-                    <br/>
+    
                     <textarea rows='4' cols='50' name='correoTexto'>Introducir texto mensaje </textarea>
                     <br/><br/>
 
@@ -602,29 +666,32 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
                     <hr>
                     <!-- mostramos panel de busquqeda -->
                     <!-- insertamos la tabla con los correos entrantes-->
-                    <label onclick="mostrar('ventana_buscar'); return false" >Buscar mensajes</label>
+                    <label onclick="mostrar('ventana_buscar'); return false" ><strong>Buscar mensajes</strong></label>
                     <div id='ventana_buscar' style='display: none'>
-                        <table>
+                        <table class="tablaFiltros">
                             <tr>
                                 <td><input type="radio" name="check_list[]" value="checkDE"><label>DE</label></td>
                                 <td><input type="radio" name="check_list[]" value="checkPARA"><label>PARA</label></td>
-                                <td> <input type="radio" name="check_list[]" value="checkCC"><label>CC</label><br/></td>
+                            
                             </tr>
                             <tr>
                                 <td><input type="radio" name="check_list[]" value="checkASUNTO"><label>ASUNTO</label><br/></td>
                                 <td><input type="radio" name="check_list[]" value="checkTEXTO"><label>TEXTO</label><br/></td>
                             </tr>
-
+                            <tr>
+                                <td> <input type="radio" name="check_list[]" value="checkCC"><label>CC</label><br/></td>
+                            </tr>
                         </table>
 
                         <input class ="campoTexto" type='text' name='filtro_busqueda'>
-                        <input class ="boton2" type='submit' name='buscar' value='Buscar'>
+                        
+                        <input class ="botonBuscar" type='submit' name='buscar' value='Buscar'>
                     </div>
                 </form>     
 
                 <hr>
 
-                <p>Bandeja de entrada (pulsar para mostrar mensajes)</p>
+                <p><strong>Bandeja de entrada</strong></p>
                 <ul>
 
                     <li class ="lista" onclick="mostrar('correo_no_leido'); return false" >Nuevos: <?php echo count($correosNoLeidos); ?></li>
@@ -639,7 +706,7 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
                             if ($elementosBuzon == -1) {
                                 $elementosBuzon = 0;
                             }
-                            echo '<li class =\'lista\'  onclick="mostrar(\'buzon_' . $nombreBuzon . '\'); return false" >' . $nombreBuzon . ' : ' . $elementosBuzon . '</li>';
+                            echo '<li class =\'lista\'  onclick="mostrar(\'buzon_' . $nombreBuzon . '\'); return false" >' . $nombreBuzon . ': ' . $elementosBuzon . '</li>';
                         }
                     }
                     ?>
@@ -648,7 +715,12 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
                 <!-- Por si quiero scroll <div id="Layer1" style="width:1000px; height:1150px; overflow: scroll;"> -->
                 <div class="divNivel1" id="correo_no_leido" style="display: none">
                     <hr>
-                    <label><strong>Correo no leido</strong></label></br>
+                    <form class ="formInterno" action='bandeja_entrada.php' method='post'>
+                    <label><strong>Correo no leido</strong></label>
+                    <input class="botonDeleteCarpeta" type='submit' name='deleteCarpeta' value='Acceder' />
+                    <input type='hidden' name='bandejaDelete' value='INBOX' />
+                    <input type='hidden' name='seen' value='0' /></br>
+                    </form>
                     <?php
                     // CORREO NO LEIDO
                     $tipoStilo = 2;
@@ -666,7 +738,12 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
 
                 <div class="divNivel1" id="correo_leido"  style="display: none">
                     <hr>
-                    <label><strong>Correo leido</strong></label></br>
+                    <form class ="formInterno" action='bandeja_entrada.php' method='post'>
+                    <label><strong>Correo leido</strong></label>
+                    <input class="botonDeleteCarpeta" type='submit' name='deleteCarpeta' value='Acceder' />
+                    <input type='hidden' name='bandejaDelete' value='INBOX' />
+                    <input type='hidden' name='seen' value='1' /></br>
+                    </form>
 <?php
 // CORREO LEIDO
 $tipoStilo = 2;
@@ -684,7 +761,10 @@ foreach ($correosLeidos as $correoUsuario) {
 
                 <div class="divNivel1" id="eliminados" style="display: none">
                     <hr>
-                    <label><strong>Eliminados</strong></label></br>
+                    <form class ="formInterno" action='bandeja_entrada.php' method='post'>
+                    <label><strong>Eliminados</strong></label>
+                    <input class="botonDeleteCarpeta" type='submit' name='deleteCarpeta' value='Acceder' />
+                    <input type='hidden' name='bandejaDelete' value='Trash' /></br>
 <?php
 // CORREO ELIMINADO
 $tipoStilo = 2;
@@ -700,9 +780,12 @@ foreach ($correosBorrados as $correoUsuario) {
 ?>
                 </div>
 
-                <div lass="divNivel1" id="enviados" style="display: none">
+                <div class="divNivel1" id="enviados" style="display: none">
                     <hr>
-                    <label><strong>Enviados</strong></label></br>
+                    <form class ="formInterno" action='bandeja_entrada.php' method='post'>
+                    <label><strong>Enviados</strong></label>
+                    <input class="botonDeleteCarpeta" type='submit' name='deleteCarpeta' value='Acceder' />
+                    <input type='hidden' name='bandejaDelete' value='Sent' /></br>
 <?php
 // CORREO ENVIADO
 $tipoStilo = 2;
@@ -720,12 +803,18 @@ foreach ($correosEnviados as $correoUsuario) {
 
                 <!--resto de buzones -->
                     <?php
-                    // CORREO ENVIADO
-                    if (is_array($otrosBuzones) && count($otrosBuzones)) {
+
+                    if ($otrosBuzones != null && is_array($otrosBuzones) && count($otrosBuzones)) {
                         foreach ($otrosBuzones as $nombreBuzon => $correosDelBuzon) {
-                            echo ' <div lass=\'divNivel1\' id="buzon_' . $nombreBuzon . '" style="display: none">';
+                            echo ' <div class=\'divNivel1\' id="buzon_' . $nombreBuzon . '" style="display: none">';
                             echo ' <hr>';
-                            echo ' <label><strong>' . $nombreBuzon . '</strong></label></br>';
+                            
+                            echo "<form class ='formInterno' action='bandeja_entrada.php' method='post'>"
+                                ."<label><strong>".$nombreBuzon."  </strong></label>"
+                                ."<input class='botonDeleteCarpeta' type='submit' name='deleteCarpeta' value='Acceder' />"
+                                ."<input type='hidden' name='bandejaDelete' value='".$nombreBuzon."' /></br>";
+
+                            //echo ' <label><strong>' . $nombreBuzon . '</strong></label>';
                             if (count($correosDelBuzon) > 0) {
                                 $tipoStilo == 2;
                                 foreach ($correosDelBuzon as $correoUsuario) {
@@ -736,6 +825,7 @@ foreach ($correosEnviados as $correoUsuario) {
                                             $tipoStilo = 2;
                                         }
                                         echo montarMensajeCarpetaAdiciona($correoUsuario, $nombreBuzon, $tipoStilo);
+                                        //echo montarMensaje($correoUsuario, 4, $nombreBuzon, $tipoStilo);
                                     }
                                 }
                             }
@@ -744,7 +834,6 @@ foreach ($correosEnviados as $correoUsuario) {
                     }
                     ?>
             </fieldset>
-
         </div>
     </body>
 </html>

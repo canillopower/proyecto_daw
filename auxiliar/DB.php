@@ -384,7 +384,7 @@ class DB {
                 $sql .= "(";
                 $sql .= $valores;
                 $sql .= ")";
-                echo $sql;
+                //echo $sql;
                 $resultado = self::ejecutaConsulta($sql);
                 if ($resultado) {
                     return 0;

@@ -15,6 +15,7 @@ if (isset($_POST['salir'])) {
       header("Location: login.php");
 }
 
+
 // recuperamos los datos del usuario
 if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO']) && isset($_SESSION['MODIFICAR'])) {
     $usuario = DB::recuperarUsuarioPorCorreo($_SESSION['CORREO']);
@@ -29,7 +30,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
         if (isset($_POST['correo']) && filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
             $datos['CORREO'] = $_POST['correo'];
         } else {
-            $error[0] = "El campo correo no puede estar vacio";
+            $error[0] = "No es una dirección de correo valida";
         }
     }
 
@@ -179,7 +180,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                         <br/>
                          <?php
                             if (isset($error[0])) {
-                                echo "<label>***".$error[0]."</label>";
+                                echo "<div class='error'>".$error[0]."</div>";
                             }
                          ?>
                     </div>
@@ -193,7 +194,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                                /><br/>
                          <?php
                             if (isset($error[1])) {
-                                echo "<label>***".$error[1]."</label>";
+                                echo "<div class='error'>".$error[1]."</div>";
                             }
                          ?>
                         
@@ -217,7 +218,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                          <?php
                          
                             if (isset($error[2])) {
-                                echo "<label>***".$error[2]."</label>";
+                                echo "<div class='error'>".$error[2]."</div>";
                             }
                          ?>
                     </div>
@@ -232,7 +233,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                                /><br/>
                         <?php
                             if (isset($error[3])) {
-                                echo "<label>***".$error[3]."</label>";
+                                echo "<div class='error'>".$error[3]."</div>";
                             }
                          ?>
                     </div>
@@ -247,7 +248,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                                /><br/>
                         <?php
                             if (isset($error[4])) {
-                                echo "<label>***".$error[4]."</label>";
+                                echo "<div class='error'>".$error[4]."</div>";
                             }
                          ?>
                     </div>
@@ -276,7 +277,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                                /><br/>
                         <?php
                             if (isset($error[5])) {
-                                echo "<label>***".$error[5]."</label>";
+                                echo "<div class='error'>".$error[5]."</div>";
                             }
                          ?>
                     </div>
@@ -287,7 +288,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                         <?php 
                       
                             if ($usuario != null) {
-                                echo "<input class='boton1' type='submit' name='modificar' value='Modificar' />";
+                                echo "<input class='boton1' type='submit' name='modificar' value='Modificar' /> <br/>";
                             } else {
                                 echo "<input class='boton1' type='submit' name='registrarse' value='Registrarse' />";
                             }

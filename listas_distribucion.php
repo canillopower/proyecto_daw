@@ -121,19 +121,17 @@ if (isset($_POST['salir']) && !empty($_POST['salir'])) {
         <fieldset> 
             <legend>Gestión listas de distribucion</legend>
 <?php
-echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2() . "</p>";
+echo "<h3>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2() . "</h3>";
 ?>
-
-
-            <br/>    
+  
             <!-- debo pintar las lista de ditribución dle usuasrio-->
             
                <form action='listas_distribucion.php' method='post'>
                 <label>Crear Lista</label>
                 <input type='text' name='nombreLista'/>
-           
-                
+               
                 <input class = 'botonAniadir' type='submit' name='aniadirLista' />
+                <br/><br/>
             <?php
             if (isset($erroresAltaLista[0])) {
                 echo "<p>".$erroresAltaLista[0]."</p>";
@@ -149,13 +147,13 @@ echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario-
             ?>
             </form>
             
-            
+            <label>Listas del usuario:</label>
             <?php
             if ($usuario->getListaDistri() != null && count($usuario->getListaDistri()) > 0) {
                 foreach ($usuario->getListaDistri() as $nombreLista => $elementosLista) {
                     echo "<form action='listas_distribucion.php' method='post'>";
                     echo "<input type='hidden' name='nombreListaBorrar' value='" . $nombreLista . "' />";
-                    echo '<label onclick="mostrar(\'elementos' . $nombreLista . '\'); return false">' . $nombreLista . '</label>';
+                    echo '<label onclick="mostrar(\'elementos' . $nombreLista . '\'); return false">' . $nombreLista . '   </label>';
                     echo "<input class = 'botonDelete' type='submit' name='borrarLista'  /></br>";
                     echo "</form>";
 
@@ -173,20 +171,20 @@ echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario-
                     if (is_array($elementosLista) && count($elementosLista) > 0) {
                         foreach ($elementosLista as $elementoLista) {
                             echo "<form action='listas_distribucion.php' method='post'>";
-                            echo "<input type='hidden' name='nombreListaPadreBorrar' value='" . $nombreLista . "' />";
-                            echo "<input type='hidden' name='elementoListaBorrar' value='" . $elementoLista . "' />";
-                            echo '<label >' . $elementoLista . '</label>';
+                            echo "<input type='hidden' name='nombreListaPadreBorrar' value='" . $nombreLista . "  ' />";
+                            echo "<input type='hidden' name='elementoListaBorrar' value='" . $elementoLista . "  ' />";
+                            echo '<label >' . $elementoLista . '  </label>';
                             echo "<input class = 'botonDelete2' type='submit' name='borrarElementoLista' /></br>";
 
 
                             echo "</form>";
                         }
                     }
-
+                    echo "<br/>";
                     echo "<form action='listas_distribucion.php' method='post'>";
                     echo "<input type='hidden' name='nombreListaPadreAniadir' value='" . $nombreLista . "' />";
 
-                    echo " <label>Dirección </label>";
+                    //echo " <label>Dirección </label>";
                     echo "<input type='text' name='nombreElementoLista'/> ";
                     if (isset($erroresAltaElementoLista[0])) {
                         echo $erroresAltaElementoLista[0];
@@ -228,7 +226,7 @@ echo "<p>" . $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario-
             ?>
 
             <form action='listas_distribucion.php' method='post'>
-           
+           <br/>
                 <input class="boton1" type='submit' name='volver' value='Volver bandeja de entrada' />
                 <br/>
                 <br/>

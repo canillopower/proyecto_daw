@@ -11,8 +11,12 @@ class GEST_CORREO {
         $mail->host = CONSTANTES::$HOST;
         $mail->Username = $de;
         $mail->Password = $passUser;
+        
+        $mail->From = "admin@kanomail.es";
+        $mail->FromName = "Administración usuarios KanoMail.es";
+
         $mail->AddAddress($para);
-        $mail->Subject = "Administración KANOMAIL.es";
+        $mail->Subject = "Administración KanoMail.es";
         $mail->Body = "Buenos días, su cuenta de correo ".$para." ha sido ". $operacion;
 
 
@@ -25,14 +29,17 @@ class GEST_CORREO {
         }
     }
     
-    public static function responderCorreo($de, $passUser, $para, $texto, $asunto) {
-          $mail = new PHPMailer;
+    public static function responderCorreo($de, $passUser,$nombreUser, $para, $texto, $asunto) {
+        $mail = new PHPMailer;
         $mail->IsSMTP();
         $mail->host =  CONSTANTES::$HOST;
         $mail->Username = $de;
         $mail->Password = $passUser;
-
-                
+                      
+        $mail->From = $de;
+        $mail->FromName = $nombreUser;
+        $mail->addReplyTo($de, "Responder");
+        
         $mail->AddAddress($para);
 
         $mail->Subject = $asunto;
@@ -48,25 +55,15 @@ class GEST_CORREO {
              $arrayHeader = iconv_mime_decode_headers($mail->getSentMIMEMessage());
              $message = "From: ".$arrayHeader['From']."\r\n"
                    . "To: ".$arrayHeader['To']."\r\n"
+                   . "Date: ".$arrayHeader['Date']."\r\n"
                    . "Subject: ".$arrayHeader['Subject']."\r\n"
                    . "Message-ID: ".$arrayHeader['Message-ID']."\r\n"
                    . "".$body."\r\n";
              
              $imapStream = imap_open($server."Sent", $de, $passUser);
-            imap_append($imapStream, $server."Sent", $message, "\\Seen");
+            imap_append($imapStream, $server."Sent", $message,  "\\Seen"); // antes tenia \\Seen al final
             imap_close($imapStream);
-            /*$mbox = imap_open('{192.168.0.160}', $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
-            
-            imap_append($mbox,
-                    "Sent",
-                   $mail->getSentMIMEMessage()
-                   );
-            imap_close($mbox);
-            */
-      /*      
-             $mail->copyToFolder(); // Will save into inbox
-    $mail->copyToFolder("Sent"); // Will save into Sent folder
-    */
+
             
             return 0;
             
@@ -88,7 +85,7 @@ class GEST_CORREO {
         }
 
         if (array_search($server . "Trash", $lista) === false) {
-            imap_createmailbox($mbox, imap_utf7_encode($server . "Sent"));
+            imap_createmailbox($mbox, imap_utf7_encode($server . "Trash"));
         }
         
         $todoDatos = array();
@@ -113,6 +110,8 @@ class GEST_CORREO {
                         $correo = new Correo($datosCorreo, $body);
                         $correosDelBuzon[$datosCorreo->msgno] = $correo;
                     }
+                    $correosDelBuzon = array_reverse($correosDelBuzon);
+                    
                     $todoDatos[$nombre] = $correosDelBuzon;
                 }
             }
@@ -120,6 +119,46 @@ class GEST_CORREO {
 
         imap_close($mbox);
         return $todoDatos;
+    }
+    
+    
+     public static function borrarTodosCorreosPorBandeja($de, $passUser, $bandeja, $seen) {
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+        $list = imap_getmailboxes($mbox, $server, "*");
+
+        if (is_array($list)) {
+
+            foreach ($list as $clave => $valor) {
+                
+                $nombre = str_replace($server, "", imap_utf7_decode($valor->name));
+                
+                if ($nombre == $bandeja) {
+                          //un vez obtenido el nombre del buzon, compruebo si existe carpeta, y me traigo sus correos
+                    imap_reopen($mbox, $server . $nombre);
+
+                    $MC = imap_check($mbox);
+                    $MN = $MC->Nmsgs;
+                    if ($MN > 0) {
+                        $overview = imap_fetch_overview($mbox, "1:$MN", 0);
+   
+                        foreach ($overview as $claveArray => $datosCorreo) {
+                            if ("INBOX" == $bandeja && $seen != null) {
+                                // borramos los no leidos o no leidos dependiendo del valor de seen
+                                if ($datosCorreo->seen == $seen) {
+                                    imap_delete($mbox, $datosCorreo->msgno);
+                                }
+                            } else {
+                                imap_delete($mbox, $datosCorreo->msgno);
+                            }
+                            
+                        }
+                    }
+                }
+            }
+        }
+        imap_expunge($mbox);
+        imap_close($mbox);
     }
     
     
@@ -188,7 +227,9 @@ class GEST_CORREO {
                         $correo = new Correo($overview[0], $body);
                         $numCorr = $overview[0]->msgno;
                         $correosDelBuzon[$numCorr] = $correo;
+
                     } 
+                     $correosDelBuzon = array_reverse($correosDelBuzon);
                     $todoDatos[$nombre] = $correosDelBuzon;
                 }
                 } 
@@ -387,13 +428,18 @@ class GEST_CORREO {
        
     }
     
-    public static function enviarCorreo($de, $passUser, $para, $paraCC, $asunto, $texto) {
-           $mail = new PHPMailer;
+    public static function enviarCorreo($de, $passUser, $nombreUser, $para, $paraCC, $asunto, $texto) {
+        $mail = new PHPMailer;
         $mail->IsSMTP();
         $mail->host =  CONSTANTES::$HOST;
         $mail->Username = $de;
         $mail->Password = $passUser;
+        
 
+        $mail->From = $de;
+        $mail->FromName = $nombreUser;
+        $mail->addReplyTo($de);
+        
         if ($para != null && count($para) > 0) {
             
             foreach ($para as $direccion) {
@@ -406,6 +452,7 @@ class GEST_CORREO {
             
             foreach ($paraCC as $direccion) {
                 $mail->AddAddress($direccion);
+                $mail->addCC($direccion);
             }
         }
 
@@ -416,29 +463,58 @@ class GEST_CORREO {
         if ($mail->send()) {
              $server =  CONSTANTES::$SERVER;
              
+             $header = $mail->MIMEHeader;
              $body = $mail->MIMEBody;
              
-             $header = $mail->MIMEHeader;
+           
              $arrayHeader = iconv_mime_decode_headers($mail->getSentMIMEMessage());
              $message = "From: ".$arrayHeader['From']."\r\n"
                    . "To: ".$arrayHeader['To']."\r\n"
+                   . "Date: ".$arrayHeader['Date']."\r\n"
                    . "Subject: ".$arrayHeader['Subject']."\r\n"
+                   . "MIME-Version: 1.0\r\n" 
                    . "Message-ID: ".$arrayHeader['Message-ID']."\r\n"
-                   . "".$body."\r\n";
+                   . "Content-Type: text/plain; charset=\"utf-8\"\r\n"
+                   . "Content-Transfer-Encoding: quoted-printable\r\n"
+                . "\r\n\r\n"
+                . $body."\r\n"
+                . "\r\n\r\n"
+                     
+                     ;
+                   //. "Content-Type: ".$arrayHeader['Content-Type']."\r\n"
+                   //. $body."\r\n\r\n";
              
             $imapStream = imap_open($server."Sent", $de, $passUser);
             imap_append($imapStream, $server."Sent", $message, "\\Seen");
             imap_close($imapStream);
-           
-            echo "Message has been sent successfully";
+
             return 0;
             
         } else {
-            echo "Mailer Error: " . $mail->ErrorInfo;
+           echo "Mailer Error: " . $mail->ErrorInfo;
             return 1;
         }
     }
-    
+    /*
+    public static function borrarCarpetaAdicional($de, $passUser, $nombreCarpeta) {
+           //tipo Bandeja
+        // 1. Recibidos (IMBOx)
+        // 2. Saliente (Sent)
+        // 3. Enviados (Trash)
+        echo "-".$nombreCarpeta."-";
+        $server = CONSTANTES::$SERVER;
+        $mbox = imap_open($server, $de, $passUser) or die('No se ha podido conectar a su cuenta de correo: ' . imap_last_error());
+        
+        
+        //imap_reopen($mbox, $server.$nombreCarpeta);
+        
+        imap_deletemailbox($mbox, 'INBOX.'.$nombreCarpeta);
+
+        imap_expunge($mbox);
+
+        imap_close($mbox);
+    }
+    */
 }  
 
 

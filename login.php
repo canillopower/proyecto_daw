@@ -14,11 +14,11 @@ if (isset($_POST['enviar'])) {
 
         // validaciones de los campos
         if (!filter_var($_POST['correo'], FILTER_VALIDATE_EMAIL)) {
-            $errores[0] = 'El formato de la dirección de correo no es correcto';
+            $errores[0] = '<div class="error">El formato de la dirección de correo no es correcto</div>';
         }
 
         if ($_POST['password'] == '') {
-            $errores[1] = 'La contraseña no puede estar vacia';
+            $errores[1] = '<div class="error">La contraseña no puede estar vacia</div>';
         }
 
         // si no se han producido errrores continuamos con la operación
@@ -40,7 +40,7 @@ if (isset($_POST['enviar'])) {
                 $_SESSION['PASSWORD'] = $usuario->getPassword();
                 if ("2" == $usuario->getTipo()) {
                     if ("1" == $usuario->getEstado()) {
-                        $errorOperacion = "Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.";
+                        $errorOperacion = "<div class='error'>Lo sentimos, pero su petición de alta esta siendo procesada en estos momentos.</div>";
                     } else if ("2" == $usuario->getEstado()) {
                         // guardamos los datos en session y vamos a la ventana de correo
                         header("Location: bandeja_entrada.php");
@@ -50,7 +50,7 @@ if (isset($_POST['enviar'])) {
                     header("Location: admin_usuarios.php");
                 }
             } else {
-                $errorOperacion = "El usuario no existe en nuestra base de datos";
+                $errorOperacion = "<div class='error'>El usuario no existe en nuestra base de datos</div>";
             }
         }
     }
@@ -80,7 +80,7 @@ if (isset($_POST['enviar'])) {
                         <input class="campoTexto" type='text' name='correo' id='correo' maxlength="50" /><br/>
 <?php
 if (isset($errores[0])) {
-    echo "<label>***" . $errores[0] . "</label>";
+    echo $errores[0];
 }
 ?>
                     </div>
@@ -90,7 +90,7 @@ if (isset($errores[0])) {
                         <input class="campoTexto" type='password' name='password' id='password' maxlength="50" /><br/>
 <?php
 if (isset($errores[1])) {
-    echo "<label>***" . $errores[1] . "</label>";
+    echo $errores[1] ;
 }
 ?>
                     </div>

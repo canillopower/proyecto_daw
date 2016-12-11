@@ -17,8 +17,13 @@ if (isset($_POST['salir'])) {
     header("Location: logoff.php");
 }
 
+// IR CORREO
+if (isset($_POST['correo'])) {
+    header("Location: bandeja_entrada.php");
+}
+
 // CAMBIAR ESTADO USUARIO
-if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado'])) {
+/*if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado']) && (!isset($_SESSION['estadoCambiado']) || $_SESSION['estadoCambiado'] == 0)) {
 
     // hacemos split de los valores ya que ajax nos envia un unico elemento
 
@@ -29,8 +34,10 @@ if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado'])) {
         $nuevoEstado = null;
         if ($valores[0] == "activada") {
             $datos["ID_ESTADO_USUARIO"] = "2"; // cambiamos de inactivo 1 a 2 activo
+            $nuevoEstado = "activada";
         } else {
             $datos["ID_ESTADO_USUARIO"] = "1"; // cambiamos de activo 2 a 1 inactivo
+             $nuevoEstado = "desactivada";
         }
 
         // actualizamos el estado en BBDD
@@ -39,10 +46,48 @@ if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado'])) {
         DB::insertarOactualizarUsuario("UPDATE", $datos);
 
         GEST_CORREO::enviarCorreoBienvenida(
-                $_SESSION['ID_USUARIO'], $_SESSION['PASSWORD'], $valores[2], "activada");
+                $_SESSION['ID_USUARIO'], $_SESSION['PASSWORD'], $valores[2], $nuevoEstado);
 
+        $_SESSION['estadoCambiado'] = 1;
         unset($_POST['cambiarEstado']);
     }
+} else {
+    if (isset($_SESSION['estadoCambiado'])) {
+        $_SESSION['estadoCambiado'] = 0;
+    }
+}*/
+
+if (isset($_POST['cambiarEstado']) && !empty($_POST['cambiarEstado'])
+        && isset($_POST['correo_usuario']) && !empty($_POST['correo_usuario'])
+        && isset($_POST['correo_pass']) && !empty($_POST['correo_pass'])
+        && isset($_POST['id_usuario']) && !empty($_POST['id_usuario'])
+        && isset($_SESSION['ID_USUARIO']) && isset($_SESSION['PASSWORD']) && isset($_SESSION['CORREO'])) {
+        
+        $nuevoEstado = null;
+        if ($_POST['cambiarEstado'] == "Activar") {
+            $datos["ID_ESTADO_USUARIO"] = "2"; // cambiamos de inactivo 1 a 2 activo
+            $nuevoEstado = "activada";
+        } else {
+            $datos["ID_ESTADO_USUARIO"] = "1"; // cambiamos de activo 2 a 1 inactivo
+             $nuevoEstado = "desactivada";
+        }
+       
+        $datos["ID_USUARIO"] = $_POST['id_usuario'];
+       
+        // actualizamos los datos en la BBDD
+        DB::insertarOactualizarUsuario("UPDATE", $datos);
+        
+        $para[] = $_POST['correo_usuario'];
+        // enviamos correo de bienvenida
+        GEST_CORREO::enviarCorreo(
+                $_SESSION['CORREO'],
+                $_SESSION['PASSWORD'], 
+                "Admin users",
+                $para,
+                null,
+                "Alta/Baja usuarios",
+                "Buenos días, su cuenta de correo ha sido ".$nuevoEstado );
+       
 }
 
 // cargamos los usuarios de BBDD pendientes de alta
@@ -77,7 +122,7 @@ if (isset($_POST['filtrar']) && ((isset($_POST['nombre']) && !empty($_POST['nomb
         <link href="css/comun.css" rel="stylesheet" type="text/css">
         <link href="css/admin.css" rel="stylesheet" type="text/css">
         <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7.1/jquery.min.js" type="text/javascript"></script>
-
+<!--
         <script type="application/javascript">
 
 
@@ -93,7 +138,7 @@ if (isset($_POST['filtrar']) && ((isset($_POST['nombre']) && !empty($_POST['nomb
 
             }
 
-        </script>
+        </script>-->
     </head>
 
     <body>
@@ -124,11 +169,15 @@ if (isset($_POST['filtrar']) && ((isset($_POST['nombre']) && !empty($_POST['nomb
                             if (isset($estado) && $estado == 1) echo "checked"; 
                             ?> value="1">Inactivo</imput>
                         </br>
-                        <input class="boton2" type='submit' name='filtrar' value='Filtrar' />
+                        <input class="botonBuscar" type='submit' name='filtrar' value='Filtrar' />
                     </div>
-
+                    <br/>
+                    <input class="boton1" type='submit' name='correo' value='Ir buzón correo' />
+                    <br/><br/>
+                        <input class="boton1" type='submit' name='salir' value='Salir' />
+                        
                 </fieldset>
-
+                        
             </form>
             <fieldset >
                 <legend>Adminitracion usuarios</legend>
@@ -139,7 +188,7 @@ if (isset($_POST['filtrar']) && ((isset($_POST['nombre']) && !empty($_POST['nomb
                             <th>Nombre</th>
                             <th>Correo</th> 
                             <th>Password</th> 
-                            <th>Inactivo - Activo</th>    
+                            <th>Activar - Desactivar</th>    
                         </tr>
 
 <?php
@@ -160,17 +209,21 @@ if (isset($usuariosPteAlta) && count($usuariosPteAlta) >= 0) {
         echo "<td>";
 
         if ("1" == $usuario->getEstado()) {
-            $var = 'activada,' . $usuario->getId() . ',' . $usuario->getCorreo();
+            
+            echo "<input class='boton1' type='submit' name='cambiarEstado' value='Activar' />";
+            /*$var = 'activada,' . $usuario->getId() . ',' . $usuario->getCorreo();
             echo '<label onclick="cambiarEstado(\'' . $var . '\');" return false; id="labelCheck" name="labelCheck" class="switch" >
                                     <input type="checkbox" >
                                     <div class="slider round"></div>
-                                  </label>';
+                                  </label>';*/
         } elseif ("2" == $usuario->getEstado()) {
-            $var = 'desactivar,' . $usuario->getId() . ',' . $usuario->getCorreo();
+            
+            echo "<input class='boton1' type='submit' name='cambiarEstado' value='Desactivar' />";
+           /* $var = 'desactivar,' . $usuario->getId() . ',' . $usuario->getCorreo();
             echo '<label onclick="cambiarEstado(\'' . $var . '\');" return false; id="labelCheck" name="labelCheck" class="switch" >
                                     <input type="checkbox" checked>
                                     <div class="slider round"></div>
-                                  </label>';
+                                  </label>';*/
         }
         echo "</tr>";
         echo "</form>";
@@ -178,9 +231,7 @@ if (isset($usuariosPteAlta) && count($usuariosPteAlta) >= 0) {
 }
 ?>
                     </table>
-                    <form action='admin_usuarios.php' method='post'>
-                        <input class="boton1" type='submit' name='salir' value='Salir' />
-                    </form>
+                  
                 </div>                   
             </fieldset>
         </form>

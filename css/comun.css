@@ -6,6 +6,14 @@
         margin-top: 5px;
 }
 
+.campoTextoMover {
+	border:2px solid #456879;
+	border-radius:10px;
+	height: 28px;
+	width: 100px;
+        margin-top: 5px;
+}
+
 .combo{
 	border:2px solid #456879;
 	border-radius:10px;
@@ -29,6 +37,20 @@ a:hover { text-transform:uppercase; }
         height: 25px;
 }
 
+.boton2 {
+	border: 1px solid #3366FF;
+	background-color:#B3C6FF;
+        width: 230px;
+        height: 25px;
+}
+.boton2:hover {
+	border: 2px dotted #FF6633;
+	color:#FF6600;
+	font-weight:bold;
+        width: 230px;
+        height: 25px;
+}
+
 body, input, button, select, option, textarea  {
     background-color: #ffffff;
     text-align: center;
@@ -41,7 +63,7 @@ form {
     margin-right: 35%;
 }
 
-.boton2 {
+.botonBuscar {
     border:2px solid #456879;
     border-radius:10px;
     height: 28px;
@@ -74,6 +96,17 @@ form {
 
 }
 
+.botonDeleteCarpeta {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -1000em;
+    background: #EBE3CD url(../images/borrar_carpeta.png) no-repeat 5px center;
+
+
+}
+
 .botonAniadir {
     border:2px solid #456879;
     border-radius:10px;
@@ -81,6 +114,15 @@ form {
     width: 30px;
     text-indent: -9999em;
     background: #EBE3CD url(../images/aniadir.png) no-repeat 5px center;
+}
+
+.botonLeido {
+    border:2px solid #456879;
+    border-radius:10px;
+    height: 28px;
+    width: 30px;
+    text-indent: -9999em;
+    background: #EBE3CD url(../images/leido.png) no-repeat 5px center;
 
 
 }
@@ -94,4 +136,20 @@ form {
     background: #EBE3CD url(../images/archivar.png) no-repeat 5px center;
 
 
+}
+
+.error {
+border: 1px solid;
+margin: 10px 0px;
+padding:15px 10px 15px 50px;
+background-repeat: no-repeat;
+background-position: 10px center;
+color: #D8000C;
+background-color: #FFBABA;
+background-image: url('../images/error.png');
+}
+
+.tablaFiltros {
+    text-align: left;
+    padding-left: 20%;
 }
