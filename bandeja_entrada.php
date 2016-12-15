@@ -168,9 +168,9 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
                          }
                     }
                 }
-            } else {
+            } /*else {
                   $erroresEnvioCorreo[0] = "Debe seleccionar al menos una lista distribución"; 
-            }
+            }*/
             
             //$arrayDireccionesParaAux = explode(";", $_POST['correoPara']);
             /*foreach ($arrayDireccionesParaAux as $direc) {
@@ -178,7 +178,7 @@ if (isset($_SESSION['CORREO']) && !empty($_SESSION['CORREO'])) {
             }*/
             
             // validamos las direcciones de correo
-            if (!isset($erroresEnvioCorreo[0]) && count($arrayDireccionesPara) > 0) {
+            if (!isset($erroresEnvioCorreo[0]) && isset($_POST['listas_districomboPara']) && count($arrayDireccionesPara) > 0) {
                 foreach ($arrayDireccionesPara as $direccion) {
                     if (!empty($direccion) && !filter_var($direccion, FILTER_VALIDATE_EMAIL)) {
                         $erroresEnvioCorreo[1] = "La dirección ".$direccion." no cumple el formato requerido"; 

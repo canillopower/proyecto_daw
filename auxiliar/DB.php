@@ -173,19 +173,25 @@ class DB {
     public static function recuperarUsuarioPorNombreEstado($nombre, $estado) {
         $sql = "SELECT * FROM usuarios WHERE";
 
-        if ($nombre != null) {
+        if ($nombre != null && !empty($nombre)) {
             $sql .= " nombre like '%" . $nombre . "%'";
             if ($estado != null) {
                 $sql .= " AND";
             }
         }
 
-        if ($estado != null) {
-            $sql .= " ID_ESTADO_USUARIO = " . $estado;
+        if ($estado != null && !empty($estado)) {
+            // si inactivo
+            if ("2" == $estado) {
+                $sql .= " ID_ESTADO_USUARIO = " . $estado;
+            } else {
+                $sql .= " ID_ESTADO_USUARIO IN (1,3)" ;
+            }
+            
         }
 
         // incluyo ordenacion
-        $sql.= "  ORDER BY ID_USUARIO DESC";
+        $sql.= " AND ID_USUARIO != 0  ORDER BY ID_USUARIO DESC";
 
         $resultado = self::ejecutaConsulta($sql);
 

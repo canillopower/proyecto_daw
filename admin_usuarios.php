@@ -150,24 +150,14 @@ if (isset($_POST['filtrar']) && ((isset($_POST['nombre']) && !empty($_POST['nomb
                     <div>
 
                         <label for='nombre' >Nombre de usuario:</label><br/>
-                        <input class="campoTexto" type='text' name='nombre' id='nombre' maxlength="50"  value = "
-                        <?php
-                        if (isset($_POST['nombre']) && !empty($_POST['nombre'])) {
-                            echo $_POST['nombre'];
-                        }
-                        ?>"/><br/>
+                        <input class="campoTexto" type='text' name='nombre' id='nombre' maxlength="50"  value = ""/><br/>
 
                         Estado:
                         <input type="radio" name="estado" 
-                        <?php
-                        if (isset($estado) && $estado == 2)
-                            echo "checked";
-                        ?> value="2">Activo</imput>
+                        value="2">Activo</imput>
 
                         <input type="radio" name="estado" 
-                            <?php 
-                            if (isset($estado) && $estado == 1) echo "checked"; 
-                            ?> value="1">Inactivo</imput>
+                           value="1">Inactivo</imput>
                         </br>
                         <input class="botonBuscar" type='submit' name='filtrar' value='Filtrar' />
                     </div>
@@ -197,7 +187,12 @@ if (isset($usuariosPteAlta) && count($usuariosPteAlta) >= 0) {
         echo "<form action='admin_usuarios.php' method='post'>";
         $nombre = $usuario->getNombre() . " " . $usuario->getApe1() . " " . $usuario->getApe2();
         echo "<tr>";
-        echo "<td>" . $nombre . "</td>";
+        if ("3" == $usuario->getEstado()) {
+            echo "<td><strong>" . $nombre . "</strong></td>";
+        } else {
+            echo "<td>" . $nombre . "</td>";
+        }
+        
         echo "<td>" . $usuario->getCorreo() . "</td>";
         echo "<td>" . $usuario->getPassword() . "</td>";
         // si estado inactivo solo puedo 
@@ -208,7 +203,7 @@ if (isset($usuariosPteAlta) && count($usuariosPteAlta) >= 0) {
 
         echo "<td>";
 
-        if ("1" == $usuario->getEstado()) {
+        if ("1" == $usuario->getEstado() || "3" == $usuario->getEstado() ) {
             
             echo "<input class='boton1' type='submit' name='cambiarEstado' value='Activar' />";
             /*$var = 'activada,' . $usuario->getId() . ',' . $usuario->getCorreo();

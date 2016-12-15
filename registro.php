@@ -76,7 +76,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
         
         if (isset($_POST['registrarse'])) {
             $datos['ID_TIPO_USUARIO'] = 2;
-            $datos['ID_ESTADO_USUARIO'] = 1;
+            $datos['ID_ESTADO_USUARIO'] = 3;
             // 0 > correcto
             // 1 > la cuenta de correo ya existe
             // 2 > error durante la actualización o inserción del registro 
@@ -92,15 +92,15 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                 // header("Location: login.php");
             } else if ($resultado_insert == 1) {
                 // error inserción porque el correo ya existe
-                $errorOperacion = "Lo sentimos, pero la dirección de correo ya existe";
+                //$errorOperacion = "Lo sentimos, pero la dirección de correo ya existe";
                 $error[0] = "La dirección ya existe";
             } else if ($resultado_insert == 2) {
                 // error inserción
-                $errorOperacion = "Lo sentimos, se ha producido un error durante la inserción";
+                $error[0] = $errorOperacion = "Lo sentimos, se ha producido un error durante la inserción";
             }
         } else if (isset($_POST['modificar'])) {
             $datos['ID_USUARIO'] = $usuario->getId();
-             $resultado_insert = DB::insertarOactualizarUsuario("UPDATE", $datos);
+            $resultado_insert = DB::insertarOactualizarUsuario("UPDATE", $datos);
             if ($resultado_insert == 0) {
                 // insercion correcta y redirigimos a la ventana de loging hasta
                 // que el admin de de alta las peticiones
@@ -111,7 +111,7 @@ if (isset($_POST['registrarse']) || isset($_POST['modificar'])) {
                 // header("Location: login.php");
             } else if ($resultado_insert == 2) {
                 // error inserción
-                $errorOperacion = "Lo sentimos, se ha producido un error durante la actualización";
+                $error[0] = "Lo sentimos, se ha producido un error durante la actualización";
             }
         }
     }
